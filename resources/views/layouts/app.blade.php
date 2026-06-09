@@ -131,7 +131,9 @@
   </x-modal>
 
   {{-- Toast Container --}}
-  <x-toast />
+  @if (! View::hasSection('sweetalert-feedback'))
+    <x-toast />
+  @endif
 
   {{-- ============================================================
        SCRIPTS

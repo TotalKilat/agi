@@ -22,20 +22,9 @@
   function detectCurrentPage() {
     var path = window.location.pathname;
     if (path === '/' || path === '') return 'dashboard';
-    if (path.indexOf('/agents') === 0) return 'agents';
     if (path.indexOf('/analytics') === 0) return 'analytics';
-    if (path.indexOf('/activity') === 0) return 'activity';
-    if (path.indexOf('/settings') === 0) return 'settings';
-    return 'dashboard';
+    return null;
   }
-
-  // Highlight active nav item
-  (function () {
-    var current = detectCurrentPage();
-    document.querySelectorAll('.sidebar-nav-item[data-page]').forEach(function (item) {
-      item.classList.toggle('active', item.dataset.page === current);
-    });
-  })();
 
   // ----- DOM -----
   var sidebar         = document.getElementById('sidebar');
@@ -73,15 +62,6 @@
   if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
   if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', openMobileSidebar);
   if (sidebarOverlay) sidebarOverlay.addEventListener('click', closeMobileSidebar);
-
-  // ----- Sidebar Nav Items (SPA fallback if data-page exists) -----
-  document.querySelectorAll('.sidebar-nav-item[data-page]').forEach(function (item) {
-    item.addEventListener('click', function (e) {
-      e.preventDefault();
-      var page = item.dataset.page;
-      if (page) window.appNavigate(page);
-    });
-  });
 
   // ----- Dropdowns -----
   if (userMenuBtn) {

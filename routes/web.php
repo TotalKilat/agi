@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AgentController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\MenuController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -29,6 +30,10 @@ Route::view('/activity', 'pages.activity')->name('activity');
 
 // Settings
 Route::view('/settings', 'pages.settings')->name('settings');
+
+// Sidebar menu management
+Route::get('menus/data', [MenuController::class, 'data'])->name('menus.data');
+Route::resource('menus', MenuController::class)->except('show');
 
 // Logout (placeholder)
 Route::post('/logout', function () {

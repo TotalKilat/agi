@@ -17,29 +17,36 @@
 
   {{-- Navigation --}}
   <nav class="sidebar-nav">
-    <div class="sidebar-nav-section">Main Menu</div>
+    @forelse(($sidebarMenus ?? collect()) as $section => $menus)
+      <div class="sidebar-nav-section">{{ $section }}</div>
 
-    <x-nav-item route="dashboard" icon="dashboard" :active="request()->routeIs('dashboard')">
-      Dashboard
-    </x-nav-item>
+      @foreach($menus as $menu)
+        <x-nav-item
+          :href="$menu->destinationUrl()"
+          :icon="$menu->icon"
+          :active="$menu->isCurrent() || $menu->children->contains(fn ($child) => $child->isCurrent())"
+          :target="$menu->target"
+        >
+          {{ $menu->name }}
+        </x-nav-item>
 
-    <x-nav-item route="agents" icon="agents" :badge="$agentCount ?? 0" :active="request()->routeIs('agents*')">
-      AI Agents
-    </x-nav-item>
-
-    <x-nav-item route="analytics" icon="analytics" :active="request()->routeIs('analytics')">
-      Analytics
-    </x-nav-item>
-
-    <x-nav-item route="activity" icon="activity" :badge="3" :active="request()->routeIs('activity')">
-      Activity
-    </x-nav-item>
-
-    <div class="sidebar-nav-section">Workspace</div>
-
-    <x-nav-item route="settings" icon="settings" :active="request()->routeIs('settings')">
-      Settings
-    </x-nav-item>
+        @foreach($menu->children as $child)
+          <x-nav-item
+            :href="$child->destinationUrl()"
+            :icon="$child->icon"
+            :active="$child->isCurrent()"
+            :target="$child->target"
+            :child="true"
+          >
+            {{ $child->name }}
+          </x-nav-item>
+        @endforeach
+      @endforeach
+    @empty
+      <div class="sidebar-empty">
+        No active menu is configured.
+      </div>
+    @endforelse
   </nav>
 
   {{-- Sidebar Footer --}}
