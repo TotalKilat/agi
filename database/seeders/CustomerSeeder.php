@@ -13,7 +13,7 @@ class CustomerSeeder extends Seeder
             [
                 'name'    => 'Alex Kim',
                 'email'   => 'alex@agentix.ai',
-                'password' => bcrypt('password'),
+                'password' => 'password123',
                 'phone'   => '+1-555-0101',
                 'city'    => 'San Francisco',
                 'country' => 'United States',
@@ -21,7 +21,7 @@ class CustomerSeeder extends Seeder
             [
                 'name'    => 'Sarah Chen',
                 'email'   => 'sarah@acmecorp.com',
-                'password' => bcrypt('password'),
+                'password' => 'password123',
                 'phone'   => '+1-555-0102',
                 'city'    => 'New York',
                 'country' => 'United States',
@@ -29,7 +29,7 @@ class CustomerSeeder extends Seeder
             [
                 'name'    => 'Marco Rossi',
                 'email'   => 'marco@example.it',
-                'password' => bcrypt('password'),
+                'password' => 'password123',
                 'phone'   => '+39-010-5555',
                 'city'    => 'Milan',
                 'country' => 'Italy',

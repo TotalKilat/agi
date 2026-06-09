@@ -35,10 +35,7 @@ class CustomerService
      */
     public function create(array $data): Customer
     {
-        return DB::transaction(function () use ($data) {
-            $data['password'] = bcrypt($data['password']);
-            return Customer::create($data);
-        });
+        return DB::transaction(fn () => Customer::create($data));
     }
 
     /**
@@ -49,8 +46,6 @@ class CustomerService
         return DB::transaction(function () use ($customer, $data) {
             if (empty($data['password'])) {
                 unset($data['password']);
-            } else {
-                $data['password'] = bcrypt($data['password']);
             }
             $customer->update($data);
             return $customer->fresh();

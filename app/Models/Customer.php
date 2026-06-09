@@ -29,7 +29,6 @@ class Customer extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'password'  => 'hashed',
     ];
 
     protected $hidden = [

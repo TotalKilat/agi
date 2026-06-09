@@ -1432,6 +1432,33 @@ body {
   gap: 4px 20px;
 }
 
+.form-error {
+  color: var(--color-danger) !important;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-light);
+  margin-top: 8px;
+}
+
+.toggle-labeled {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.toggle-labeled .form-label {
+  margin-bottom: 0;
+}
+
+.customer-form {
+  padding: 24px;
+}
+
 .menu-form-card {
   width: 100%;
 }
