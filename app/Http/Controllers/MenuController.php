@@ -41,6 +41,9 @@ class MenuController extends Controller
                 'action',
                 fn (Menu $menu) => view('pages.menus.columns.action', compact('menu'))->render(),
             )
+            ->filterColumn('name', function ($query, string $keyword): void {
+                $query->where('name', 'like', "%{$keyword}%");
+            })
             ->filterColumn('destination', function ($query, string $keyword): void {
                 $query->where(function ($query) use ($keyword): void {
                     $query

@@ -2,7 +2,7 @@
 
 @section('title', 'Create Customer')
 @section('page-title', 'Create Customer')
-@section('sweetalert-feedback', 'true')
+@section('crud-assets', 'true')
 
 @section('content')
 <div class="page-section active">
@@ -15,7 +15,7 @@
       <a href="{{ route('customers.index') }}" class="btn btn-secondary btn-sm">Back</a>
     </div>
 
-    <form method="POST" action="{{ route('customers.store') }}" class="card customer-form-card" id="customerForm">
+    <form method="POST" action="{{ route('customers.store') }}" class="card form-card" id="customerForm">
       @csrf
       @include('pages.customers._form', ['customer' => null])
       <div class="form-actions">
@@ -26,7 +26,3 @@
   </div>
 </div>
 @endsection
-
-@push('scripts')
-  @vite('resources/js/customer.js')
-@endpush

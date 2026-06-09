@@ -39,6 +39,10 @@ Route::resource('menus', MenuController::class)->except('show');
 Route::get('customers/data', [\App\Http\Controllers\CustomerController::class, 'data'])->name('customers.data');
 Route::resource('customers', \App\Http\Controllers\CustomerController::class)->except('show');
 
+// Fleet management
+Route::get('fleets/data', [\App\Http\Controllers\FleetController::class, 'data'])->name('fleets.data');
+Route::resource('fleets', \App\Http\Controllers\FleetController::class)->except('show');
+
 // Logout (placeholder)
 Route::post('/logout', function () {
     return redirect('/');

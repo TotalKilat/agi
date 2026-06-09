@@ -32,7 +32,7 @@
 
 <div class="form-group">
   <label for="password" class="form-label">{{ $isEdit ? 'New Password (leave blank to keep current)' : 'Password' }}</label>
-  <input type="text" name="password" id="password" class="form-input @error('password') form-input-error @enderror" minlength="8" maxlength="255" {{ $isEdit ? '' : 'required' }}>
+  <input type="text" name="password" id="password" class="form-input @error('password') form-input-error @enderror" {{ $isEdit ? '' : 'required' }}>
   <div class="form-hint">Stored as plain text — not used for authentication.</div>
   @error('password') <div class="form-error">{{ $message }}</div> @enderror
 </div>

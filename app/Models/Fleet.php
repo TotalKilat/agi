@@ -5,27 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Customer extends Model
+class Fleet extends Model
 {
     use HasFactory;
     use HasUlids;
     use SoftDeletes;
 
     protected $fillable = [
-        'name',
-        'username',
-        'email',
-        'password',
-        'phone',
-        'address',
-        'city',
-        'state',
-        'postal_code',
-        'country',
-        'notes',
+        'customer_id',
+        'vehicle_name',
+        'device_name',
         'is_active',
     ];
 
@@ -33,12 +25,8 @@ class Customer extends Model
         'is_active' => 'boolean',
     ];
 
-    protected $hidden = [
-        'password',
-    ];
-
-    public function fleets(): HasMany
+    public function customer(): BelongsTo
     {
-        return $this->hasMany(Fleet::class);
+        return $this->belongsTo(Customer::class);
     }
 }

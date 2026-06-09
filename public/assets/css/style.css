@@ -881,7 +881,8 @@ body {
   gap: 10px;
 }
 
-.agent-name {
+.agent-name,
+.record-name {
   font-weight: 600;
   color: var(--color-text-primary);
 }
@@ -1417,7 +1418,7 @@ body {
 }
 
 .form-error {
-  color: var(--color-danger);
+  color: var(--color-danger) !important;
   font-size: 12px;
   margin-top: 4px;
 }
@@ -1432,34 +1433,7 @@ body {
   gap: 4px 20px;
 }
 
-.form-error {
-  color: var(--color-danger) !important;
-}
-
-.form-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  padding-top: 16px;
-  border-top: 1px solid var(--color-border-light);
-  margin-top: 8px;
-}
-
-.toggle-labeled {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.toggle-labeled .form-label {
-  margin-bottom: 0;
-}
-
-.customer-form-card {
-  width: 100%;
-}
-
-.menu-form-card {
+.form-card {
   width: 100%;
 }
 
@@ -1509,13 +1483,13 @@ body {
   border-top: 1px solid var(--color-border-light);
 }
 
-.menu-name-cell {
+.record-name-cell {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.menu-icon-preview {
+.record-icon {
   width: 36px;
   height: 36px;
   flex-shrink: 0;
@@ -1527,7 +1501,7 @@ body {
   background: var(--color-burnt-peach-light);
 }
 
-.menu-icon-preview svg,
+.record-icon svg,
 .table-action-btn svg {
   width: 16px;
   height: 16px;
@@ -1549,116 +1523,6 @@ body {
 .table-action-danger:hover {
   color: var(--color-danger);
   background: var(--color-danger-bg);
-}
-
-.data-table-container {
-  width: 100%;
-}
-
-.data-table-container .dt-container {
-  color: var(--color-text-secondary);
-  font-family: inherit;
-  font-size: 13px;
-}
-
-.data-table-container .dt-layout-row {
-  align-items: center;
-  gap: 12px;
-  margin: 0 0 16px;
-}
-
-.data-table-container .dt-layout-row:last-child {
-  margin: 16px 0 0;
-}
-
-.data-table-container .dt-search {
-  display: flex;
-  align-items: center;
-}
-
-.data-table-container .dt-search label {
-  display: none;
-}
-
-.data-table-container .dt-input {
-  min-height: 38px;
-  margin: 0 !important;
-  padding: 8px 12px !important;
-  border: 1px solid var(--color-border) !important;
-  border-radius: var(--radius-sm) !important;
-  background: var(--color-bg-white) !important;
-  color: var(--color-text-primary) !important;
-  font-family: inherit;
-  font-size: 13px;
-}
-
-.data-table-container .dt-search .dt-input {
-  min-width: 240px;
-}
-
-.data-table-container .dt-input:focus {
-  border-color: var(--color-burnt-peach) !important;
-  outline: none !important;
-  box-shadow: 0 0 0 3px rgba(226, 114, 91, 0.1);
-}
-
-.data-table-container .dt-layout-table {
-  overflow-x: auto;
-  border: 1px solid var(--color-border-light);
-  border-radius: var(--radius-lg);
-}
-
-.data-table-container table.dataTable {
-  margin: 0 !important;
-}
-
-.data-table-container table.dataTable thead th {
-  border-bottom: 1px solid var(--color-border-light);
-}
-
-.data-table-container table.dataTable tbody td {
-  border-bottom: 1px solid var(--color-border-light);
-}
-
-.data-table-container table.dataTable tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.data-table-container .dt-paging {
-  display: flex;
-  gap: 4px;
-}
-
-.data-table-container .dt-paging .dt-paging-button {
-  min-width: 34px;
-  min-height: 34px;
-  margin: 0 !important;
-  padding: 6px 10px !important;
-  border: 1px solid var(--color-border) !important;
-  border-radius: var(--radius-sm) !important;
-  background: var(--color-bg-white) !important;
-  color: var(--color-text-primary) !important;
-}
-
-.data-table-container .dt-paging .dt-paging-button.current,
-.data-table-container .dt-paging .dt-paging-button.current:hover {
-  border-color: var(--color-burnt-peach) !important;
-  background: var(--color-burnt-peach) !important;
-  color: #FFFFFF !important;
-}
-
-.data-table-container .dt-paging .dt-paging-button:hover:not(.disabled) {
-  border-color: var(--color-burnt-peach) !important;
-  background: var(--color-burnt-peach-light) !important;
-  color: var(--color-burnt-peach) !important;
-}
-
-.data-table-container .dt-processing {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-bg-white);
-  box-shadow: var(--shadow-lg);
-  color: var(--color-text-primary);
 }
 
 /* ----- Empty State ----- */
@@ -1887,20 +1751,6 @@ body {
 
   .form-grid {
     grid-template-columns: 1fr;
-  }
-
-  .data-table-container .dt-layout-row {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .data-table-container .dt-layout-cell {
-    width: 100%;
-  }
-
-  .data-table-container .dt-search .dt-input {
-    width: 100%;
-    min-width: 0;
   }
 
   .navbar {

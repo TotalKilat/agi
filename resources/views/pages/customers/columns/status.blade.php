@@ -1,3 +1,1 @@
-<x-badge :type="$customer->is_active ? 'success' : 'neutral'">
-  {{ $customer->is_active ? 'Active' : 'Inactive' }}
-</x-badge>
+<x-status-badge :active="$customer->is_active" />

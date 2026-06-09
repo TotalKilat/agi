@@ -2,13 +2,12 @@
 
 @section('title', 'Menu Management')
 @section('page-title', 'Menu Management')
-@section('sweetalert-feedback', 'true')
+@section('crud-assets', 'true')
 
 @section('content')
 <div
-  class="page-section active"
+  class="page-section active js-crud-page"
   id="menuIndexPage"
-  data-table-url="{{ route('menus.data') }}"
   data-csrf-token="{{ csrf_token() }}"
   data-success-message="{{ session('success') }}"
   data-info-message="{{ session('info') }}"
@@ -34,16 +33,22 @@
       </div>
 
       <div class="data-table-container">
-        <table class="table" id="menuTable">
+        <table
+          class="table js-data-table"
+          id="menuTable"
+          data-url="{{ route('menus.data') }}"
+          data-order='[[2,"asc"],[5,"asc"],[1,"asc"]]'
+          data-plural-label="menus"
+        >
           <thead>
             <tr>
-              <th></th>
-              <th>Menu</th>
-              <th>Section</th>
-              <th>Destination</th>
-              <th>Parent</th>
-              <th>Order</th>
-              <th>Status</th>
+              <th data-column="action" data-orderable="false" data-searchable="false"></th>
+              <th data-column="menu" data-name="name">Menu</th>
+              <th data-column="section">Section</th>
+              <th data-column="destination" data-orderable="false">Destination</th>
+              <th data-column="parent_name" data-orderable="false">Parent</th>
+              <th data-column="sort_order">Order</th>
+              <th data-column="status" data-name="is_active">Status</th>
             </tr>
           </thead>
           <tbody></tbody>
@@ -53,7 +58,3 @@
   </div>
 </div>
 @endsection
-
-@push('scripts')
-  @vite('resources/js/menu.js')
-@endpush

@@ -2,7 +2,7 @@
 
 @section('title', 'Create Menu')
 @section('page-title', 'Create Menu')
-@section('sweetalert-feedback', 'true')
+@section('crud-assets', 'true')
 
 @section('content')
 <div class="page-section active">
@@ -15,7 +15,7 @@
       <a href="{{ route('menus.index') }}" class="btn btn-secondary btn-sm">Back</a>
     </div>
 
-    <form method="POST" action="{{ route('menus.store') }}" class="card menu-form-card" id="menuForm">
+    <form method="POST" action="{{ route('menus.store') }}" class="card form-card" id="menuForm">
       @csrf
       @include('pages.menus._form')
       <div class="form-actions">
@@ -26,7 +26,3 @@
   </div>
 </div>
 @endsection
-
-@push('scripts')
-  @vite('resources/js/menu.js')
-@endpush

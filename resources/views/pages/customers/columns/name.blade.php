@@ -1,1 +1,1 @@
-<div class="agent-name">{{ $customer->name }}</div>
+<div class="record-name">{{ $customer->name }}</div>

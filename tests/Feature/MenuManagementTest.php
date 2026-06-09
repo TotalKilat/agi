@@ -36,7 +36,7 @@ class MenuManagementTest extends TestCase
             'draw' => 1,
             'start' => 0,
             'length' => 10,
-            'search' => ['value' => 'Dashboard', 'regex' => 'false'],
+            'search' => ['value' => 'Customers', 'regex' => 'false'],
             'columns' => [
                 [
                     'data' => 'menu',
@@ -52,7 +52,7 @@ class MenuManagementTest extends TestCase
             ->assertOk()
             ->assertJsonPath('draw', 1)
             ->assertJsonPath('recordsFiltered', 1)
-            ->assertJsonPath('data.0.section', 'Main Menu')
+            ->assertJsonPath('data.0.section', 'Administrator')
             ->assertJsonMissingPath('data.0.id');
     }
 

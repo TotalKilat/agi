@@ -131,7 +131,7 @@
   </x-modal>
 
   {{-- Toast Container --}}
-  @if (! View::hasSection('sweetalert-feedback'))
+  @if (! View::hasSection('crud-assets'))
     <x-toast />
   @endif
 
@@ -143,6 +143,10 @@
 
   {{-- App JS --}}
   <script src="{{ asset('assets/js/app.js') }}?v={{ filemtime(public_path('assets/js/app.js')) }}"></script>
+
+  @if (View::hasSection('crud-assets'))
+    @vite('resources/js/crud.js')
+  @endif
 
   {{-- Stack for page-specific scripts --}}
   @stack('scripts')

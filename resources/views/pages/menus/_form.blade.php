@@ -20,7 +20,7 @@
 
   <div class="form-group">
     <label for="parent_id" class="form-label">Parent Menu</label>
-    <select id="parent_id" name="parent_id" class="form-select js-select2 @error('parent_id') form-input-error @enderror" data-placeholder="None (top-level menu)">
+    <select id="parent_id" name="parent_id" class="form-select js-select2 @error('parent_id') form-input-error @enderror" data-placeholder="None (top-level menu)" data-allow-clear="true">
       <option value="">None (top-level menu)</option>
       @foreach($parentOptions as $parent)
         <option value="{{ $parent->id }}" @selected($selectedParent === $parent->id)>

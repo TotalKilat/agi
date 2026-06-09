@@ -1,613 +1,553 @@
 # Frontend Development Standard
 
-Dokumen ini menjadi standar implementasi frontend untuk project Laravel ini.
+Dokumen ini adalah sumber aturan frontend untuk seluruh modul Laravel pada project
+ini. Tujuan utamanya adalah konsistensi, reuse, dan mencegah CSS/JavaScript yang
+disalin ke setiap domain.
 
-## 1. Prinsip Umum
+## 1. Aturan Utama
 
-- Gunakan Blade untuk struktur halaman dan Vite untuk asset JavaScript/CSS modular.
-- Pertahankan konsistensi dengan design token di `public/assets/css/style.css`.
-- Pisahkan markup, behavior, dan data source.
-- Hindari inline style dan inline script untuk fitur baru.
-- Setiap fitur harus dapat digunakan pada desktop dan mobile.
+- Satu pola UI yang sama harus memiliki satu implementasi global.
+- Jangan membuat `menu.css`, `customer.css`, `fleet.css`, atau file sejenis hanya
+  untuk menyalin style Select2, DataTables, form, alert, button, atau card.
+- Jangan membuat JavaScript CRUD per modul jika perbedaannya hanya URL, nama
+  kolom, urutan tabel, label, atau pesan.
+- Perbedaan konfigurasi dideklarasikan melalui HTML `data-*`; behavior tetap
+  berada di JavaScript global.
+- Class CSS reusable menggunakan nama fungsi seperti `.form-card`,
+  `.record-name`, atau `.data-table-container`, bukan nama domain.
+- File khusus modul hanya diperbolehkan untuk behavior atau visual yang benar-
+  benar unik dan tidak masuk akal dipakai modul lain.
 
-## 2. Struktur
+## 2. Ownership Asset
 
 ```text
-resources/
-├── js/
-│   ├── app.js
-│   └── {feature}.js
-├── css/
-│   └── {feature}.css
-└── views/
-    ├── components/
-    ├── layouts/
-    ├── pages/{feature}/
-    │   ├── index.blade.php
-    │   ├── create.blade.php
-    │   ├── edit.blade.php
-    │   ├── _form.blade.php
-    │   └── columns/
-    │       ├── action.blade.php
-    │       ├── name.blade.php
-    │       └── status.blade.php
-    └── partials/
+public/assets/css/style.css
+resources/css/components.css
+resources/js/crud.js
+resources/js/app.js
+resources/views/components/
+resources/views/pages/{module}/
 ```
 
-- Gunakan component untuk elemen reusable.
-- Gunakan partial untuk potongan halaman atau kolom tabel yang memiliki markup khusus.
-- JavaScript khusus modul ditempatkan di file terpisah, misalnya `resources/js/menu.js`.
-- CSS khusus modul ditempatkan di `resources/css/{feature}.css` dan di-import dari JS module-nya.
+### `public/assets/css/style.css`
 
-## 3. Asset dan Dependency
+Berisi design token dan komponen native aplikasi:
 
-- Install dependency frontend melalui NPM dan simpan versinya di `package.json`.
-- Muat asset khusus halaman dengan `@vite()` melalui `@push('scripts')`.
-- Jangan menambahkan CDN baru jika package dapat dikelola melalui NPM.
-- Jangan menaruh credential, token privat, atau konfigurasi sensitif di bundle frontend.
-- Jalankan `npm run build` setelah menambah atau mengubah entry Vite.
-- Daftarkan setiap JS module baru di `vite.config.js` dalam array `input`.
+- layout, sidebar, navbar;
+- typography;
+- button, card, badge;
+- table HTML dasar;
+- form input, textarea, grid, switch, action;
+- modal, toast, pagination, empty state;
+- utility visual yang reusable.
 
-## 4. Blade
+Jangan menaruh selector khusus library pihak ketiga di file ini.
 
-- Escape data dinamis dengan `{{ }}`.
-- Gunakan `{!! !!}` hanya untuk HTML internal yang sudah dikontrol.
-- Hindari query database dan business logic di Blade.
-- Gunakan named route melalui `route()`, bukan URL hard-coded.
-- Form mutasi wajib memakai `@csrf` dan method spoofing bila diperlukan.
-- Gunakan stack `styles` dan `scripts` untuk kebutuhan khusus halaman.
-- Halaman index dan form yang menggunakan JS module wajib menambahkan `@push('scripts')`:
-  ```blade
-  @push('scripts')
-    @vite('resources/js/{feature}.js')
-  @endpush
-  ```
+### `resources/css/components.css`
 
-### Pola Halaman Index
+Berisi adapter tema untuk library pihak ketiga yang digunakan oleh CRUD:
+
+- DataTables;
+- Select2;
+- SweetAlert2.
+
+Style library ditulis satu kali di file ini dan di-import oleh `crud.js`.
+
+### `resources/js/crud.js`
+
+Berisi behavior umum seluruh modul CRUD:
+
+- inisialisasi DataTables server-side;
+- pembacaan konfigurasi kolom dari `<th data-*>`;
+- inisialisasi Select2;
+- flash message SweetAlert;
+- konfirmasi dan request delete AJAX;
+- reload DataTables setelah delete.
+
+### `resources/js/app.js`
+
+Berisi behavior shell aplikasi yang tidak spesifik CRUD, misalnya sidebar,
+navbar, dropdown, atau shortcut global.
+
+## 3. Larangan Duplikasi
+
+Jangan membuat file berikut untuk modul CRUD biasa:
+
+```text
+resources/css/{module}.css
+resources/js/{module}.js
+```
+
+Contoh yang dilarang:
+
+- `fleet.css`, `customer.css`, dan `menu.css` berisi style Select2 yang sama;
+- tiga fungsi `initializeSelect2()` pada tiga file;
+- tiga implementasi delete AJAX yang hanya berbeda kata `fleet/customer/menu`;
+- tiga konfigurasi SweetAlert dengan warna dan tombol yang sama;
+- class `.menu-form-card`, `.fleet-form-card`, `.customer-form-card` yang semuanya
+  hanya berisi `width: 100%`.
+
+Aktifkan asset shared melalui marker layout:
 
 ```blade
-@extends('layouts.app')
+@section('crud-assets', 'true')
+```
 
-@section('title', '{Feature Label}')
-@section('page-title', '{Feature Label}')
-@section('sweetalert-feedback', 'true')
+File khusus modul baru boleh dibuat jika memenuhi semua kondisi:
 
-@section('content')
+1. behavior tidak dapat dinyatakan lewat konfigurasi `data-*`;
+2. behavior tidak cocok menjadi komponen global;
+3. implementasinya benar-benar berbeda, bukan hanya beda label atau endpoint;
+4. alasan pengecualian dicatat dalam code review.
+
+## 4. Struktur Modul CRUD
+
+```text
+resources/views/pages/{module}/
+├── index.blade.php
+├── create.blade.php
+├── edit.blade.php
+├── _form.blade.php
+└── columns/
+    ├── action.blade.php
+    ├── name.blade.php
+    └── status.blade.php
+```
+
+Folder `columns` hanya diperlukan untuk kolom dengan HTML. Kolom teks biasa
+tidak memerlukan partial.
+
+Komponen global yang tersedia:
+
+- `<x-crud-actions>` untuk edit/delete;
+- `<x-status-badge>` untuk status boolean;
+- `<x-badge>` untuk badge umum;
+- `<x-modal>` untuk modal;
+- `<x-toast>` untuk halaman non-CRUD.
+
+## 5. Halaman Index
+
+Root halaman index wajib memakai `.js-crud-page`. Root menyimpan token dan flash
+message, bukan konfigurasi kolom.
+
+```blade
 <div
-  class="page-section active"
-  id="{feature}IndexPage"
-  data-table-url="{{ route('{feature}.data') }}"
+  class="page-section active js-crud-page"
   data-csrf-token="{{ csrf_token() }}"
   data-success-message="{{ session('success') }}"
   data-info-message="{{ session('info') }}"
 >
-  <div class="page-container">
-    <div class="page-header">
-      <div>
-        <h1 class="page-header-title">{Feature Label}</h1>
-        <p class="page-header-subtitle">{Subtitle description}</p>
-      </div>
-      <a href="{{ route('{feature}.create') }}" class="btn btn-primary btn-sm">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        New {Feature}
-      </a>
-    </div>
-
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <h3 class="card-title">All {Features}</h3>
-          <p class="card-subtitle">{Card subtitle}</p>
-        </div>
-      </div>
-
-      <div class="data-table-container">
-        <table class="table" id="{feature}Table">
-          <thead>
-            <tr>
-              <th></th>  {{-- Kolom Action — selalu pertama --}}
-              <th>Name</th>
-              <th>...</th>
-              <th>Status</th>  {{-- Kolom Status — selalu terakhir --}}
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-@endsection
-
-@push('scripts')
-  @vite('resources/js/{feature}.js')
-@endpush
 ```
 
-**Atribut `data-*` pada container page:**
-- `data-table-url` — endpoint DataTables JSON (wajib)
-- `data-csrf-token` — CSRF token untuk AJAX delete (wajib)
-- `data-success-message` — flash message success (opsional)
-- `data-info-message` — flash message info (opsional)
-
-### Pola Halaman Create
+Tabel memakai `.js-data-table` dan mendeklarasikan konfigurasi dasar:
 
 ```blade
-@extends('layouts.app')
-
-@section('title', 'Create {Feature}')
-@section('page-title', 'Create {Feature}')
-@section('sweetalert-feedback', 'true')
-
-@section('content')
-<div class="page-section active">
-  <div class="page-container">
-    <div class="page-header">
-      <div>
-        <h1 class="page-header-title">Create {Feature}</h1>
-        <p class="page-header-subtitle">{Subtitle}</p>
-      </div>
-      <a href="{{ route('{feature}.index') }}" class="btn btn-secondary btn-sm">Back</a>
-    </div>
-
-    <form method="POST" action="{{ route('{feature}.store') }}" class="card {feature}-form-card" id="{feature}Form">
-      @csrf
-      @include('pages.{feature}._form', ['{featureVar}' => null])
-      <div class="form-actions">
-        <a href="{{ route('{feature}.index') }}" class="btn btn-secondary">Cancel</a>
-        <button type="submit" class="btn btn-primary">Create {Feature}</button>
-      </div>
-    </form>
-  </div>
-</div>
-@endsection
-
-@push('scripts')
-  @vite('resources/js/{feature}.js')
-@endpush
+<table
+  class="table js-data-table"
+  id="customerTable"
+  data-url="{{ route('customers.data') }}"
+  data-order='[[1,"asc"]]'
+  data-plural-label="customers"
+  data-page-length="10"
+>
 ```
 
-### Pola Halaman Edit
+### Atribut Tabel
+
+- `data-url`: endpoint JSON Yajra, wajib.
+- `data-order`: JSON array urutan DataTables, opsional.
+- `data-plural-label`: label jamak untuk info/search/empty message, wajib.
+- `data-page-length`: jumlah row per halaman, default `10`.
+- `data-search-placeholder`: placeholder custom, opsional.
+
+### Atribut Header Kolom
+
+Setiap `<th>` wajib mendefinisikan `data-column`.
 
 ```blade
-@extends('layouts.app')
-
-@section('title', 'Edit {Feature}')
-@section('page-title', 'Edit {Feature}')
-@section('sweetalert-feedback', 'true')
-
-@section('content')
-<div class="page-section active">
-  <div class="page-container">
-    <div class="page-header">
-      <div>
-        <h1 class="page-header-title">Edit {Feature}</h1>
-        <p class="page-header-subtitle">Update {feature} details for {{ ${featureVar}->name }}</p>
-      </div>
-      <a href="{{ route('{feature}.index') }}" class="btn btn-secondary btn-sm">Back</a>
-    </div>
-
-    <form method="POST" action="{{ route('{feature}.update', ${featureVar}) }}" class="card {feature}-form-card" id="{feature}Form">
-      @csrf
-      @method('PUT')
-      @include('pages.{feature}._form')
-      <div class="form-actions">
-        <a href="{{ route('{feature}.index') }}" class="btn btn-secondary">Cancel</a>
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-      </div>
-    </form>
-  </div>
-</div>
-@endsection
-
-@push('scripts')
-  @vite('resources/js/{feature}.js')
-@endpush
+<th data-column="action" data-orderable="false" data-searchable="false"></th>
+<th data-column="name">Name</th>
+<th data-column="location" data-orderable="false">Location</th>
+<th data-column="status" data-name="is_active">Status</th>
 ```
 
-## 5. Form
+- `data-column`: key pada response JSON Yajra.
+- `data-name`: nama field database jika berbeda dari key response.
+- `data-orderable="false"`: menonaktifkan sorting.
+- `data-searchable="false"`: menonaktifkan pencarian.
+- Nilai `orderable` dan `searchable` default adalah `true`.
 
-- Setiap input wajib memiliki `label` dan `id` yang sesuai.
-- Tampilkan error validasi di dekat field terkait menggunakan `<div class="form-error">`.
-- Input dengan error wajib diberi class `form-input-error`:
-  ```blade
-  <input ... class="form-input @error('field') form-input-error @enderror" ...>
-  @error('field') <div class="form-error">{{ $message }}</div> @enderror
-  ```
-- Hint text menggunakan `<div class="form-hint">`, bukan `<span>`.
-- Pertahankan input menggunakan `old()` setelah validasi gagal.
-- Form utama menggunakan lebar penuh container.
-- Grid form menggunakan class `form-grid` (2 kolom desktop, 1 kolom mobile).
-- Field full-width (seperti address, notes) ditempatkan di luar `form-grid` dalam `<div class="form-group">` standalone.
-- Select dengan opsi dinamis atau panjang menggunakan **Select2**.
-- Select2 diinisialisasi hanya pada class eksplisit seperti `.js-select2`.
+Urutan kolom standar:
 
-### Struktur Form (`_form.blade.php`)
+1. action;
+2. nama/label utama;
+3. data pendukung;
+4. status di kolom terakhir jika tersedia.
 
-Partial `_form.blade.php` HANYA berisi field-field form (tidak ada `<form>` tag, `@csrf`, atau form actions). Form tag, CSRF, method spoofing, dan tombol actions diletakkan di create/edit blade.
+ULID dan primary key internal tidak ditampilkan.
+
+## 6. Action Tabel
+
+Partial action tidak boleh menyalin SVG dan markup tombol. Gunakan komponen:
 
 ```blade
-@php
-  $isEdit = isset(${featureVar}) && ${featureVar}->exists;
-  $isActive = old('is_active', ${featureVar}->is_active ?? true);
-@endphp
-
-<div class="form-grid">
-  <div class="form-group">
-    <label for="name" class="form-label">Full Name</label>
-    <input ... class="form-input @error('name') form-input-error @enderror" ...>
-    @error('name') <div class="form-error">{{ $message }}</div> @enderror
-  </div>
-  ...
-</div>
-
-{{-- Full-width fields di luar form-grid --}}
-<div class="form-group">
-  <label for="notes" class="form-label">Notes</label>
-  <textarea ...></textarea>
-</div>
-
-{{-- Boolean toggle menggunakan pola check-control --}}
-<div class="form-group form-group-switch">
-  <label class="form-label">Account Status</label>
-  <label class="check-control">
-    <input type="hidden" name="is_active" value="0">
-    <input type="checkbox" name="is_active" value="1" @checked($isActive)>
-    <span>
-      <strong>Active</strong>
-      <small>Description of what this toggle does.</small>
-    </span>
-  </label>
-</div>
+<x-crud-actions
+  :edit-url="route('customers.edit', $customer)"
+  :delete-url="route('customers.destroy', $customer)"
+  record-label="customer"
+  :record-name="$customer->name"
+/>
 ```
 
-### Boolean Toggle
+Komponen menghasilkan:
 
-Untuk field boolean (is_active, dll), gunakan **pola `check-control`** — BUKAN `toggle toggle-labeled`:
+- link edit;
+- tombol delete `.js-delete-record`;
+- URL delete;
+- label dan nama record untuk SweetAlert.
+
+Tidak boleh menggunakan:
+
+- `onclick`;
+- `onsubmit`;
+- `confirm()` browser;
+- class domain seperti `.js-delete-customer`.
+
+## 7. Status Tabel
+
+Status boolean menggunakan:
 
 ```blade
-<div class="form-group form-group-switch">
-  <label class="form-label">Label</label>
-  <label class="check-control">
-    <input type="hidden" name="field" value="0">
-    <input type="checkbox" name="field" value="1" @checked($isActive)>
-    <span>
-      <strong>Label Aktif</strong>
-      <small>Deskripsi.</small>
-    </span>
-  </label>
-</div>
+<x-status-badge :active="$record->is_active" />
 ```
 
-### CSS untuk Form Card
+Label dapat diubah tanpa membuat component baru:
 
-Setiap modul wajib memiliki class `.${feature}-form-card` di `style.css`. **Form harus full width** mengikuti container. Tidak boleh ada batasan `max-width`:
-
-```css
-.{feature}-form-card {
-  width: 100%;
-}
+```blade
+<x-status-badge
+  :active="$record->is_active"
+  active-label="Enabled"
+  inactive-label="Disabled"
+/>
 ```
 
-## 6. DataTables
+## 8. Backend DataTables
 
-- Listing data yang berpotensi besar wajib menggunakan **Yajra DataTables server-side**.
-- Blade hanya menyediakan header tabel dan endpoint AJAX.
-- Query berada di Service layer melalui method `getDataTableQuery()`.
-- Controller membentuk response Yajra melalui method `data()` dan partial Blade menangani kolom HTML.
-- **Wrapper tabel WAJIB menggunakan class `data-table-container`**, BUKAN `table-wrapper`.
-- Class `table-wrapper` hanya digunakan untuk tabel HTML statis (non-DataTables).
+Listing CRUD menggunakan Yajra server-side.
 
-### Struktur Kolom Standar
-
-```text
-Kolom 0: Action (edit, delete, toggle — tidak searchable, tidak orderable)
-Kolom 1: Nama / Label utama (searchable, orderable)
-Kolom 2+: Data pendukung
-Kolom N: Status (opsional, di urutan terakhir jika ada)
-```
-
-- **Kolom action WAJIB berada di posisi pertama (kolom paling kiri).** Ini berlaku untuk semua tabel CRUD di seluruh aplikasi.
-- Kolom action tidak boleh searchable atau orderable.
-- Primary key internal seperti ULID tidak ditampilkan kecuali memang dibutuhkan user.
-- Setelah mutasi AJAX, reload tabel tanpa mengubah halaman aktif:
-
-```js
-table.ajax.reload(null, false);
-```
-
-### Contoh DataTable Columns Definition
-
-```js
-columns: [
-    { data: 'action', name: 'action', orderable: false, searchable: false },  // WAJIB index 0
-    { data: 'name', name: 'name' },
-    { data: 'email', name: 'email' },
-    { data: 'location', name: 'location', orderable: false },  // computed field
-    { data: 'status', name: 'is_active' },  // WAJIB di urutan terakhir
-],
-```
-
-### Controller DataTables Endpoint
-
-```php
-use Illuminate\Database\Eloquent\Builder;
-use Yajra\DataTables\Facades\DataTables;
-
-public function data(): JsonResponse
-{
-    return DataTables::eloquent($this->service->getDataTableQuery())
-        ->addColumn('name', fn (Model $m) => view('pages.{feature}.columns.name', [/* vars */])->render())
-        ->addColumn('status', fn (Model $m) => view('pages.{feature}.columns.status', [/* vars */])->render())
-        ->addColumn('action', fn (Model $m) => view('pages.{feature}.columns.action', [/* vars */])->render())
-        ->filterColumn('computed_field', function (Builder $q, string $kw): void {
-            // custom filter logic
-        })
-        ->only(['action', 'name', ..., 'status'])
-        ->rawColumns(['action', 'name', 'status'])
-        ->toJson();
-}
-```
-
-### Route DataTables
-
-Route `data` WAJIB didefinisikan SEBELUM resource route agar tidak tertangkap route parameter:
-
-```php
-Route::get('{feature}/data', [Controller::class, 'data'])->name('{feature}.data');
-Route::resource('{feature}', Controller::class)->except('show');
-```
-
-### Service getDataTableQuery
+Service menyediakan query:
 
 ```php
 public function getDataTableQuery(): Builder
 {
-    return Model::query()->select([
-        'id',
-        'name',
-        'email',
-        // ... hanya kolom yang dibutuhkan DataTable
-        'is_active',
-    ]);
+    return Model::query()
+        ->with('relation')
+        ->select('models.*');
 }
 ```
 
-### CSS DataTables — `data-table-container`
+Controller membentuk response:
 
-Wrapper `data-table-container` memiliki styling khusus untuk elemen DataTables (search input, pagination, layout, border). Styling ini SUDAH tersedia di `style.css` dengan selector `.data-table-container`. Setiap modul DataTables cukup menggunakan class wrapper ini tanpa perlu menambah CSS tambahan.
-
-## 7. SweetAlert
-
-- Gunakan **SweetAlert2** untuk konfirmasi tindakan destruktif.
-- Pesan harus menjelaskan objek dan dampak tindakan.
-- Sediakan tombol batal untuk delete.
-- Tampilkan success/error berdasarkan response server.
-- Jangan mengandalkan alert browser native untuk fitur baru.
-
-### Inisialisasi di JS Module
-
-```js
-import Swal from 'sweetalert2';
-window.Swal = Swal;
-
-const swalTheme = {
-    confirmButtonColor: '#E2725B',
-    cancelButtonColor: '#A08980',
-};
+```php
+return DataTables::eloquent($this->service->getDataTableQuery())
+    ->addColumn('name', fn (Model $record) => view(...)->render())
+    ->addColumn('status', fn (Model $record) => view(...)->render())
+    ->addColumn('action', fn (Model $record) => view(...)->render())
+    ->only(['action', 'name', 'email', 'status'])
+    ->rawColumns(['action', 'name', 'status'])
+    ->toJson();
 ```
 
-### Konfirmasi Delete via AJAX
+Aturan:
 
-```js
-tableElement.addEventListener('click', async (event) => {
-    const button = event.target.closest('.js-delete-{feature}');
-    if (!button) return;
+- gunakan `only()` agar ULID dan field internal tidak bocor;
+- gunakan `rawColumns()` hanya untuk kolom HTML internal;
+- computed column harus memiliki `filterColumn()` jika searchable;
+- kolom relation harus eager-loaded;
+- endpoint `data` didefinisikan sebelum resource route.
 
-    const result = await Swal.fire({
-        ...swalTheme,
-        icon: 'warning',
-        title: 'Delete {feature}?',
-        text: `{Feature} "${button.dataset.name}" will be permanently deleted.`,
-        showCancelButton: true,
-        confirmButtonText: 'Delete',
-        cancelButtonText: 'Cancel',
-        reverseButtons: true,
-    });
+## 9. Form Create dan Edit
 
-    if (!result.isConfirmed) return;
-
-    try {
-        const response = await fetch(button.dataset.url, {
-            method: 'DELETE',
-            headers: {
-                Accept: 'application/json',
-                'X-CSRF-TOKEN': page.dataset.csrfToken,
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-        });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.message || 'Failed.');
-
-        await Swal.fire({ ...swalTheme, icon: 'success', title: 'Deleted', text: payload.message, timer: 1800, showConfirmButton: false });
-        table.ajax.reload(null, false);
-    } catch (error) {
-        Swal.fire({ ...swalTheme, icon: 'error', title: 'Delete failed', text: error.message });
-    }
-});
-```
-
-### Flash Messages
-
-Halaman index yang menggunakan SweetAlert wajib:
-1. Menambahkan `@section('sweetalert-feedback', 'true')` — ini menyembunyikan `<x-toast />` component
-2. Menyediakan `data-success-message` dan `data-info-message` pada container page
-3. Memanggil `showFlashMessage(page)` di JS:
-
-```js
-function showFlashMessage(page) {
-    const message = page?.dataset.successMessage || page?.dataset.infoMessage;
-    if (!message) return;
-
-    Swal.fire({
-        ...swalTheme,
-        icon: page.dataset.successMessage ? 'success' : 'info',
-        title: page.dataset.successMessage ? 'Success' : 'Information',
-        text: message,
-        timer: 2200,
-        showConfirmButton: false,
-    });
-}
-```
-
-### Column Action Partial
-
-Delete button menggunakan `<button>` dengan class `js-delete-{feature}`, BUKAN `<form>` dengan inline `onsubmit`:
+Form utama selalu:
 
 ```blade
-<div class="table-actions">
-  <a href="{{ route('{feature}.edit', $record) }}" class="table-action-btn" title="Edit">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">...</svg>
-  </a>
-  <button type="button"
-    class="table-action-btn table-action-danger js-delete-{feature}"
-    title="Delete"
-    data-name="{{ $record->name }}"
-    data-url="{{ route('{feature}.destroy', $record) }}">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">...</svg>
-  </button>
+<form method="POST" action="..." class="card form-card">
+```
+
+`.form-card` sudah global dan full width. Jangan membuat class form per modul.
+
+Partial `_form.blade.php` hanya berisi field:
+
+- tidak memiliki tag `<form>`;
+- tidak memiliki `@csrf`;
+- tidak memiliki `@method`;
+- tidak memiliki tombol save/cancel.
+
+Create/edit bertanggung jawab atas wrapper dan action:
+
+```blade
+@csrf
+@include('pages.customers._form')
+
+<div class="form-actions">
+  <a href="..." class="btn btn-secondary">Cancel</a>
+  <button type="submit" class="btn btn-primary">Save Changes</button>
 </div>
 ```
 
-## 8. JavaScript
+## 10. Field Form
 
-- Gunakan ES module dan import dependency secara eksplisit.
-- Scope inisialisasi berdasarkan elemen root halaman.
-- Pastikan script aman ketika elemen target tidak ada.
-- Gunakan `data-*` untuk mengirim URL, CSRF token, atau konfigurasi non-sensitif dari Blade.
-- Untuk request AJAX, kirim header `Accept: application/json` dan `X-CSRF-TOKEN`.
-- Tangani response gagal dan tampilkan pesan yang dapat dipahami user.
+Setiap field wajib memiliki:
 
-### Struktur JS Module
+- `label` dengan `for`;
+- input dengan `id` yang sama;
+- `old()` untuk mempertahankan nilai;
+- aturan `required`, `maxlength`, dan type HTML yang sesuai;
+- error di dekat field.
 
-Setiap modul JavaScript wajib mengikuti struktur:
+```blade
+<div class="form-group">
+  <label for="name" class="form-label">Name</label>
+  <input
+    id="name"
+    name="name"
+    class="form-input @error('name') form-input-error @enderror"
+    value="{{ old('name', $record->name ?? '') }}"
+    required
+  >
+  @error('name')
+    <div class="form-error">{{ $message }}</div>
+  @enderror
+</div>
+```
+
+Gunakan:
+
+- `.form-grid` untuk dua kolom desktop dan satu kolom mobile;
+- `.form-group` standalone untuk field full width;
+- `.form-hint` untuk bantuan;
+- `.form-error` untuk error;
+- `.form-input-error` untuk state invalid;
+- `.form-textarea` untuk teks panjang.
+
+Jangan membuat CSS baru hanya untuk mengubah lebar sebuah field. Gunakan layout
+grid atau utility global yang sudah tersedia.
+
+## 11. Boolean Field
+
+Boolean wajib mengirim `0` saat unchecked:
+
+```blade
+<label class="check-control">
+  <input type="hidden" name="is_active" value="0">
+  <input type="checkbox" name="is_active" value="1" @checked($isActive)>
+  <span>
+    <strong>Active</strong>
+    <small>Show this record in active listings.</small>
+  </span>
+</label>
+```
+
+Gunakan pola `.check-control`. Jangan membuat toggle baru per modul.
+
+## 12. Select2
+
+Select yang membutuhkan pencarian memakai:
+
+```blade
+<select
+  class="form-select js-select2"
+  data-placeholder="Select a customer..."
+>
+```
+
+Untuk select nullable:
+
+```blade
+data-allow-clear="true"
+```
+
+Aturan:
+
+- tidak perlu fungsi `initializeSelect2()` per modul;
+- tidak perlu import Select2 per modul;
+- tidak perlu CSS Select2 per modul;
+- state error ditangani global oleh `components.css`.
+
+## 13. SweetAlert dan Feedback
+
+Halaman CRUD memakai SweetAlert untuk:
+
+- flash success/info;
+- konfirmasi delete;
+- success delete;
+- error request.
+
+Semua halaman index/create/edit CRUD menambahkan:
+
+```blade
+@section('crud-assets', 'true')
+```
+
+Marker ini membuat layout:
+
+- memuat `resources/js/crud.js`;
+- tidak merender toast lama;
+- menggunakan SweetAlert untuk feedback.
+
+Index juga menyediakan flash message pada `.js-crud-page`.
+
+Delete endpoint harus mengembalikan JSON jika request mengharapkan JSON:
+
+```json
+{
+  "message": "Record deleted successfully."
+}
+```
+
+Jangan membuat konfigurasi warna SweetAlert per modul. Tema berada di `crud.js`
+dan `components.css`.
+
+## 14. CSS Reusable
+
+Nama class harus berdasarkan fungsi:
+
+```text
+form-card
+form-grid
+form-actions
+record-name
+record-name-cell
+record-icon
+data-table-container
+table-actions
+table-action-btn
+code-label
+```
+
+Nama berikut tidak diperbolehkan untuk style umum:
+
+```text
+menu-form-card
+customer-table-wrapper
+fleet-select
+menu-alert
+```
+
+Sebelum menambah CSS:
+
+1. cari class serupa dengan `rg`;
+2. periksa apakah design token sudah ada;
+3. tentukan apakah style native atau adapter library;
+4. perluas class global bila behavior sama;
+5. buat class khusus hanya jika visualnya unik.
+
+## 15. JavaScript Reusable
+
+`crud.js` membaca konfigurasi dari DOM. Modul baru tidak mengubah file ini jika
+hanya memiliki:
+
+- endpoint berbeda;
+- kolom berbeda;
+- order berbeda;
+- label singular/plural berbeda;
+- select berbeda;
+- nama record berbeda.
+
+Ubah `crud.js` hanya ketika behavior umum seluruh CRUD bertambah.
+
+Jika ada behavior unik:
+
+- buat file kecil khusus behavior tersebut;
+- jangan import ulang DataTables, Select2, SweetAlert, atau `components.css`;
+- muat file setelah `crud.js`;
+- dokumentasikan alasan behavior tidak dapat digeneralisasi.
+
+## 16. Vite
+
+Entry shared terdaftar satu kali:
 
 ```js
-import $ from 'jquery';
-import DataTable from 'datatables.net-dt';
-import select2 from 'select2';
-import Swal from 'sweetalert2';
-
-import 'datatables.net-dt/css/dataTables.dataTables.css';
-import 'select2/dist/css/select2.css';
-import 'sweetalert2/dist/sweetalert2.css';
-import '../css/{feature}.css';
-
-window.$ = window.jQuery = $;
-window.Swal = Swal;
-select2(window, $);
-
-// ... theme, helpers, init functions ...
-
-document.addEventListener('DOMContentLoaded', () => {
-    const indexPage = document.querySelector('#{feature}IndexPage');
-
-    initializeSelect2();
-    initialize{Feature}Table(indexPage);
-    showFlashMessage(indexPage);
-});
+input: [
+    'resources/css/app.css',
+    'resources/js/app.js',
+    'resources/js/crud.js',
+]
 ```
 
-- `select2(window, $)` dipanggil secara global untuk mengaktifkan Select2 jQuery plugin.
-- `initializeSelect2()` dijalankan di semua halaman (index, create, edit).
-- `initialize{Feature}Table()` hanya berjalan jika elemen tabel ada.
-- `showFlashMessage()` hanya berjalan jika elemen page dengan data message ada.
+Jangan menambahkan entry Vite untuk setiap modul CRUD.
 
-## 9. CSS
+Halaman CRUD tidak memanggil `@vite()` sendiri. Cukup tambahkan:
 
-- Gunakan CSS variable yang sudah tersedia untuk warna, radius, shadow, dan transition.
-- Hindari nilai warna baru jika token yang sesuai sudah tersedia.
-- Class diberi nama berdasarkan fungsi atau komponen, bukan posisi sementara.
-- Style library pihak ketiga harus disesuaikan dengan tema aplikasi dalam selector yang scoped.
-- Jangan mengubah style global library jika hanya satu modul yang menggunakannya.
-
-### CSS Module
-
-Setiap modul memiliki file CSS terpisah yang di-import dari JS module. CSS module minimal berisi:
-
-```css
-/* Select2 theming — konsisten di seluruh aplikasi */
-.select2-container { width: 100% !important; font-family: inherit; }
-.select2-container--default .select2-selection--single {
-    height: 42px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    background: var(--color-bg-white);
-}
-/* ... (copy from existing customer.css or menu.css) ... */
-
-/* SweetAlert2 theming */
-.swal2-popup { border-radius: var(--radius-lg); font-family: inherit; }
-.swal2-title { color: var(--color-text-primary); }
-.swal2-html-container { color: var(--color-text-secondary); }
+```blade
+@section('crud-assets', 'true')
 ```
 
-## 10. Navbar dan Navigasi
+Layout adalah satu-satunya tempat yang memuat entry `crud.js`.
 
-- Navbar hanya memuat kontrol yang benar-benar digunakan.
-- Sidebar dibentuk dari data backend dan active state berasal dari route.
-- Link eksternal dengan target tab baru wajib menggunakan `rel="noopener noreferrer"`.
-- Semua tombol ikon wajib memiliki `title` atau accessible name.
+## 17. Inline Style dan Script
 
-## 11. Responsivitas dan Aksesibilitas
+Fitur baru tidak boleh menggunakan:
 
-- Breakpoint utama mengikuti CSS project, terutama `768px`.
-- Pastikan tidak ada horizontal overflow pada viewport mobile.
-- Gunakan elemen semantik: `button` untuk action dan `a` untuk navigasi.
-- State focus harus terlihat.
-- Jangan menyampaikan status hanya melalui warna; sertakan teks atau ikon.
+- atribut `style`;
+- atribut `onclick`/`onsubmit`;
+- tag `<script>` di Blade;
+- URL hard-coded;
+- warna hard-coded jika token tersedia.
 
-## 12. Module Checklist
+Gunakan class, component, named route, dan ES module.
 
-Setiap modul baru wajib memiliki file-file berikut:
+Kode lama yang masih inline dirapikan saat area tersebut disentuh, tanpa
+melakukan refactor massal yang tidak terkait.
 
-```
-app/Http/Controllers/{Feature}Controller.php    # index, data, create, store, edit, update, destroy
-app/Services/{Feature}Service.php                # getDataTableQuery, getPaginated, create, update, delete
-app/Models/{Feature}.php                         # Model dengan HasUlids, SoftDeletes
-app/Http/Requests/{Feature}/Store{Feature}Request.php
-app/Http/Requests/{Feature}/Update{Feature}Request.php
-routes/web.php                                   # Route data + resource
-resources/views/pages/{feature}/index.blade.php
-resources/views/pages/{feature}/create.blade.php
-resources/views/pages/{feature}/edit.blade.php
-resources/views/pages/{feature}/_form.blade.php
-resources/views/pages/{feature}/columns/action.blade.php
-resources/views/pages/{feature}/columns/name.blade.php
-resources/views/pages/{feature}/columns/status.blade.php
-resources/js/{feature}.js
-resources/css/{feature}.css
-public/assets/css/style.css                      # .{feature}-form-card class
-vite.config.js                                   # entry JS
+## 18. Checklist Modul Baru
+
+Frontend modul CRUD baru hanya memerlukan:
+
+```text
+resources/views/pages/{module}/index.blade.php
+resources/views/pages/{module}/create.blade.php
+resources/views/pages/{module}/edit.blade.php
+resources/views/pages/{module}/_form.blade.php
+resources/views/pages/{module}/columns/*.blade.php
 ```
 
-## 13. Quality Gate
+Tidak membuat CSS atau JavaScript module secara default.
 
-Sebelum frontend dianggap selesai, jalankan:
+Checklist implementasi:
+
+1. root index memakai `.js-crud-page`;
+2. table memakai `.js-data-table`;
+3. setiap `<th>` memiliki `data-column`;
+4. action memakai `<x-crud-actions>`;
+5. status boolean memakai `<x-status-badge>`;
+6. form memakai `.form-card`;
+7. select searchable memakai `.js-select2`;
+8. index/create/edit memiliki section `crud-assets`;
+9. ULID tidak tampil dan tidak ada di JSON;
+10. desktop, mobile, dan console sudah diperiksa.
+
+## 19. Quality Gate
+
+Jalankan:
 
 ```bash
 npm run build
-node --check resources/js/{feature}.js
+node --check resources/js/crud.js
 php artisan view:cache
 php artisan test
+vendor/bin/pint --test
+git diff --check
 ```
 
-Lakukan pemeriksaan browser untuk:
+Browser verification wajib mencakup:
 
-- desktop dan mobile;
-- console error;
-- loading DataTables;
-- search, ordering, dan pagination;
-- Select2;
-- konfirmasi SweetAlert;
-- submit form dan pesan feedback.
+- DataTables memuat data server-side;
+- search, order, pagination;
+- action edit dan dialog delete;
+- delete batal dan delete berhasil;
+- Select2 tampil dan dapat dipilih;
+- error form terlihat;
+- flash SweetAlert hanya muncul satu kali;
+- tidak ada horizontal overflow halaman mobile;
+- console tidak memiliki error aplikasi.
