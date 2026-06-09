@@ -10,7 +10,8 @@ class MenuSeeder extends Seeder
     public function run(): void
     {
         $menus = [
-            ['name' => 'Menu Management', 'section' => 'Administrator', 'icon' => 'menu', 'route_name' => 'menus.index', 'active_pattern' => 'menus.*', 'sort_order' => 10],
+            ['name' => 'Customers', 'section' => 'Administrator', 'icon' => 'agents', 'route_name' => 'customers.index', 'active_pattern' => 'customers.*', 'sort_order' => 10],
+            ['name' => 'Menu Management', 'section' => 'Administrator', 'icon' => 'menu', 'route_name' => 'menus.index', 'active_pattern' => 'menus.*', 'sort_order' => 20],
         ];
 
         foreach ($menus as $menu) {

@@ -35,6 +35,9 @@ Route::view('/settings', 'pages.settings')->name('settings');
 Route::get('menus/data', [MenuController::class, 'data'])->name('menus.data');
 Route::resource('menus', MenuController::class)->except('show');
 
+// Customer management
+Route::resource('customers', \App\Http\Controllers\CustomerController::class);
+
 // Logout (placeholder)
 Route::post('/logout', function () {
     return redirect('/');

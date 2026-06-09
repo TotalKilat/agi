@@ -1,0 +1,46 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Customer;
+use Illuminate\Database\Seeder;
+
+class CustomerSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $customers = [
+            [
+                'name'    => 'Alex Kim',
+                'email'   => 'alex@agentix.ai',
+                'password' => bcrypt('password'),
+                'phone'   => '+1-555-0101',
+                'city'    => 'San Francisco',
+                'country' => 'United States',
+            ],
+            [
+                'name'    => 'Sarah Chen',
+                'email'   => 'sarah@acmecorp.com',
+                'password' => bcrypt('password'),
+                'phone'   => '+1-555-0102',
+                'city'    => 'New York',
+                'country' => 'United States',
+            ],
+            [
+                'name'    => 'Marco Rossi',
+                'email'   => 'marco@example.it',
+                'password' => bcrypt('password'),
+                'phone'   => '+39-010-5555',
+                'city'    => 'Milan',
+                'country' => 'Italy',
+            ],
+        ];
+
+        foreach ($customers as $data) {
+            Customer::query()->updateOrCreate(
+                ['email' => $data['email']],
+                $data,
+            );
+        }
+    }
+}
