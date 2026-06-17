@@ -66,6 +66,8 @@
     {{-- Custom Styles --}}
     <link rel="stylesheet"
         href="{{ asset('assets/css/style.css') }}?v={{ filemtime(public_path('assets/css/style.css')) }}">
+    <link rel="stylesheet"
+        href="{{ asset('assets/css/components.css') }}?v={{ filemtime(public_path('assets/css/components.css')) }}">
 
     {{-- Stack for page-specific styles --}}
     @stack('styles')
