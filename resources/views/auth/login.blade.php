@@ -144,7 +144,8 @@
               flex-shrink: 0;
             ">
                             @if ($appLogo)
-                                <img src="{{ $appLogo }}" alt="{{ $appName }}" style="width:22px; height:22px; object-fit:contain;">
+                                <img src="{{ $appLogo }}" alt="{{ $appName }}"
+                                    style="width:22px; height:22px; object-fit:contain;">
                             @else
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF"
                                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -453,7 +454,8 @@
             margin: 28px 0 24px;
           ">
                         <div style="flex: 1; height: 1px; background: #F0DDD0;"></div>
-                        <span style="font-size: 11px; color: #A08980; font-weight: 500; white-space: nowrap;">{{ strtoupper($appName) }}
+                        <span
+                            style="font-size: 11px; color: #A08980; font-weight: 500; white-space: nowrap;">{{ strtoupper($appName) }}
                             PLATFORM</span>
                         <div style="flex: 1; height: 1px; background: #F0DDD0;"></div>
                     </div>
