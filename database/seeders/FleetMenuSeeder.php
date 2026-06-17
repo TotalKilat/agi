@@ -85,6 +85,23 @@ class FleetMenuSeeder extends Seeder
                     'is_active' => true,
                 ],
             );
+
+            Menu::query()->updateOrCreate(
+                [
+                    'route_name' => 'fleet-transactions.index',
+                ],
+                [
+                    'parent_id' => null,
+                    'name' => 'Fleet Transactions',
+                    'section' => 'Transaction',
+                    'icon' => 'receipt',
+                    'url' => null,
+                    'active_pattern' => 'fleet-transactions.*',
+                    'target' => '_self',
+                    'sort_order' => 10,
+                    'is_active' => true,
+                ],
+            );
             $legacyParent?->delete();
         });
     }

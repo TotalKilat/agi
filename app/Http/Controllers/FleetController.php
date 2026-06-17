@@ -51,6 +51,7 @@ class FleetController extends Controller
                     $query
                         ->where('fleets.vehicle_name', 'like', "%{$keyword}%")
                         ->orWhere('fleets.device_name', 'like', "%{$keyword}%")
+                        ->orWhere('fleets.fuel_sensor_installed_at', 'like', "%{$keyword}%")
                         ->orWhere('fleets.latest_address', 'like', "%{$keyword}%")
                         ->orWhere('fleets.latest_mileage', 'like', "%{$keyword}%")
                         ->orWhere('fleets.latest_vehicle_status', 'like', "%{$keyword}%")
@@ -59,6 +60,16 @@ class FleetController extends Controller
                         ->orWhereHas('customer', function (Builder $query) use ($keyword): void {
                             $query->where('name', 'like', "%{$keyword}%");
                         });
+
+                    $normalizedKeyword = str($keyword)->lower()->toString();
+
+                    if (in_array($normalizedKeyword, ['yes', 'ada', 'installed'], true)) {
+                        $query->orWhere('fleets.has_fuel_sensor', true);
+                    }
+
+                    if (in_array($normalizedKeyword, ['no', 'tidak', 'not installed'], true)) {
+                        $query->orWhere('fleets.has_fuel_sensor', false);
+                    }
                 });
             })
             ->addColumn(
@@ -68,6 +79,14 @@ class FleetController extends Controller
             ->addColumn(
                 'customer_name',
                 fn (Fleet $fleet) => $fleet->customer?->name ?? '—',
+            )
+            ->addColumn(
+                'fuel_sensor',
+                fn (Fleet $fleet) => view('pages.fleets.columns.fuel_sensor', compact('fleet'))->render(),
+            )
+            ->addColumn(
+                'fuel_sensor_installed_at',
+                fn (Fleet $fleet) => $fleet->fuel_sensor_installed_at?->locale('id')->translatedFormat('d F Y') ?? '—',
             )
             ->addColumn(
                 'mileage',
@@ -101,6 +120,8 @@ class FleetController extends Controller
                 'vehicle_name',
                 'device_name',
                 'customer_name',
+                'fuel_sensor',
+                'fuel_sensor_installed_at',
                 'address',
                 'mileage',
                 'vehicle_status',
@@ -110,6 +131,7 @@ class FleetController extends Controller
             ->rawColumns([
                 'action',
                 'vehicle_name',
+                'fuel_sensor',
                 'address',
                 'mileage',
                 'vehicle_status',

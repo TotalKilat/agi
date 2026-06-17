@@ -66,6 +66,11 @@ class FleetHistoryTest extends TestCase
 
     public function test_fleet_history_is_loaded_from_gps_provider(): void
     {
+        config([
+            'services.map_tiles.traffic_url' => 'https://traffic.example.com/{z}/{x}/{y}.png',
+            'services.map_tiles.traffic_attribution' => 'Traffic Provider',
+        ]);
+
         $customer = $this->createCustomer();
         $this->createFleet($customer, 'B 2029 SJO', '867724070029407');
         $tokenRequests = 0;
@@ -151,6 +156,8 @@ class FleetHistoryTest extends TestCase
             ->assertSee('data-playback-open', false)
             ->assertSee('fleet-history-playback-data', false)
             ->assertSee('<option value="20">20x</option>', false)
+            ->assertSee('traffic.example.com', false)
+            ->assertSee('Traffic Provider')
             ->assertSee('"latitude":-0.458407', false)
             ->assertSee('"longitude":117.146476', false)
             ->assertDontSee('device-history-token');

@@ -30,6 +30,8 @@ class FleetService
                 'customer_id',
                 'vehicle_name',
                 'device_name',
+                'has_fuel_sensor',
+                'fuel_sensor_installed_at',
                 'latest_address',
                 'latest_mileage',
                 'latest_vehicle_status',

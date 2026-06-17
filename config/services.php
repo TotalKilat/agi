@@ -44,4 +44,9 @@ return [
         'position_concurrency' => (int) env('TOTAL_KILAT_GPS_POSITION_CONCURRENCY', 10),
     ],
 
+    'map_tiles' => [
+        'traffic_url' => env('MAP_TRAFFIC_TILE_URL'),
+        'traffic_attribution' => env('MAP_TRAFFIC_TILE_ATTRIBUTION', ''),
+    ],
+
 ];

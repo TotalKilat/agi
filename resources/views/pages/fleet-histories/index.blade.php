@@ -18,6 +18,10 @@
       'deviceName' => $selectedDevice,
       'range' => trim(($filters['start_time'] ?? '').' - '.($filters['end_time'] ?? ''), ' -'),
       'points' => $playbackPoints->all(),
+      'traffic' => [
+          'tileUrl' => config('services.map_tiles.traffic_url'),
+          'attribution' => config('services.map_tiles.traffic_attribution', ''),
+      ],
   ];
 @endphp
 

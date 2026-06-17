@@ -107,6 +107,14 @@ class MenuManagementTest extends TestCase
             'route_name' => 'fleet-histories.index',
             'active_pattern' => 'fleet-histories.*',
         ]);
+        $this->assertDatabaseHas('menus', [
+            'parent_id' => null,
+            'name' => 'Fleet Transactions',
+            'section' => 'Transaction',
+            'icon' => 'receipt',
+            'route_name' => 'fleet-transactions.index',
+            'active_pattern' => 'fleet-transactions.*',
+        ]);
         $this->assertDatabaseMissing('menus', [
             'parent_id' => null,
             'name' => 'Fleet',
@@ -116,7 +124,7 @@ class MenuManagementTest extends TestCase
             'name' => 'Non Active Fleet',
             'section' => 'Fleet',
         ]);
-        $this->assertDatabaseCount('menus', 3);
+        $this->assertDatabaseCount('menus', 4);
     }
 
     public function test_menu_can_be_created_with_a_ulid(): void

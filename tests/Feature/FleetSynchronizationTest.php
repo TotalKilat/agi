@@ -34,6 +34,79 @@ class FleetSynchronizationTest extends TestCase
             ->assertDontSee($customer->password);
     }
 
+    public function test_fleet_form_stores_fuel_sensor_information(): void
+    {
+        $customer = $this->createCustomer();
+
+        $this->get(route('fleets.create'))
+            ->assertOk()
+            ->assertSee('Fuel Sensor')
+            ->assertSee('fuel_sensor_installed_at', false);
+
+        $this->post(route('fleets.store'), [
+            'customer_id' => $customer->id,
+            'vehicle_name' => 'B 2029 SJO',
+            'device_name' => '60697058200041',
+            'has_fuel_sensor' => '1',
+            'fuel_sensor_installed_at' => '2026-06-10',
+            'is_active' => '1',
+        ])
+            ->assertRedirect(route('fleets.index'));
+
+        $this->assertDatabaseHas('fleets', [
+            'customer_id' => $customer->id,
+            'vehicle_name' => 'B 2029 SJO',
+            'device_name' => '60697058200041',
+            'has_fuel_sensor' => 1,
+            'fuel_sensor_installed_at' => '2026-06-10 00:00:00',
+        ]);
+    }
+
+    public function test_fleet_form_requires_installation_date_when_fuel_sensor_is_enabled(): void
+    {
+        $customer = $this->createCustomer();
+
+        $this->from(route('fleets.create'))
+            ->post(route('fleets.store'), [
+                'customer_id' => $customer->id,
+                'vehicle_name' => 'B 2029 SJO',
+                'device_name' => '60697058200041',
+                'has_fuel_sensor' => '1',
+                'fuel_sensor_installed_at' => '',
+                'is_active' => '1',
+            ])
+            ->assertRedirect(route('fleets.create'))
+            ->assertSessionHasErrors('fuel_sensor_installed_at');
+
+        $this->assertDatabaseCount('fleets', 0);
+    }
+
+    public function test_fleet_update_clears_installation_date_when_fuel_sensor_is_disabled(): void
+    {
+        $customer = $this->createCustomer();
+        $fleet = $this->createFleet($customer, 'B 2029 SJO', '60697058200041');
+        $fleet->update([
+            'has_fuel_sensor' => true,
+            'fuel_sensor_installed_at' => '2026-06-10',
+        ]);
+
+        $this->put(route('fleets.update', $fleet), [
+            'customer_id' => $customer->id,
+            'vehicle_name' => 'B 2029 SJO',
+            'device_name' => '60697058200041',
+            'has_fuel_sensor' => '0',
+            'fuel_sensor_installed_at' => '2026-06-10',
+            'is_active' => '1',
+        ])
+            ->assertRedirect(route('fleets.index'));
+
+        $this->assertDatabaseHas('fleets', [
+            'id' => $fleet->id,
+            'has_fuel_sensor' => false,
+            'fuel_sensor_installed_at' => null,
+        ]);
+    }
+
     public function test_fleet_datatable_can_search_every_displayed_field(): void
     {
         $customer = $this->createCustomer();
@@ -51,12 +124,16 @@ class FleetSynchronizationTest extends TestCase
             'latest_vehicle_status' => 'Stop',
             'latest_engine' => 'Off',
             'latest_update' => '09 Juni 2026 22:44:31',
+            'has_fuel_sensor' => true,
+            'fuel_sensor_installed_at' => '2026-06-10',
         ]);
 
         foreach ([
             'B 1071 DFP',
             '42976836',
             'AGI Customer',
+            'Yes',
+            '2026-06-10',
             'Gajah Mada',
             '39,727.86 km',
             'Stop',

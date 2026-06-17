@@ -13,6 +13,7 @@ const badgeClasses = [
 const numberFormat = new Intl.NumberFormat('en-US', {
     maximumFractionDigits: 6,
 });
+const roadmapTiles = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 
 function parsePayload() {
     const source = document.getElementById('fleet-history-playback-data');
@@ -26,6 +27,22 @@ function parsePayload() {
     } catch {
         return null;
     }
+}
+
+function trafficLayerOptions(traffic) {
+    if (!traffic?.tileUrl) {
+        return null;
+    }
+
+    return {
+        url: traffic.tileUrl,
+        options: {
+            attribution: traffic.attribution || '',
+            maxZoom: 19,
+            opacity: 0.78,
+            zIndex: 420,
+        },
+    };
 }
 
 function normalizePoints(points) {
@@ -116,6 +133,7 @@ function initializeFleetHistoryPlayback() {
 
     let map = null;
     let routeLayer = null;
+    let trafficLayer = null;
     let traveledLine = null;
     let vehicleMarker = null;
     let timer = null;
@@ -238,8 +256,16 @@ function initializeFleetHistoryPlayback() {
         fitRoute();
     };
 
-    const initializeMap = () => {
+    const initializeMap = (traffic = null) => {
         if (map) {
+            if (!trafficLayer) {
+                const trafficOptions = trafficLayerOptions(traffic);
+
+                if (trafficOptions) {
+                    trafficLayer = L.tileLayer(trafficOptions.url, trafficOptions.options).addTo(map);
+                }
+            }
+
             return;
         }
 
@@ -248,10 +274,16 @@ function initializeFleetHistoryPlayback() {
             scrollWheelZoom: true,
         });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        L.tileLayer(roadmapTiles, {
+            attribution: '',
             maxZoom: 19,
-            attribution: '&copy; OpenStreetMap contributors',
         }).addTo(map);
+
+        const trafficOptions = trafficLayerOptions(traffic);
+
+        if (trafficOptions) {
+            trafficLayer = L.tileLayer(trafficOptions.url, trafficOptions.options).addTo(map);
+        }
 
         routeLayer = L.layerGroup().addTo(map);
     };
@@ -264,14 +296,14 @@ function initializeFleetHistoryPlayback() {
         routeLayer.clearLayers();
 
         L.polyline(points.map(latLng), {
-            color: '#A08980',
+            color: '#6B7280',
             dashArray: '8 10',
-            opacity: 0.65,
+            opacity: 0.55,
             weight: 4,
         }).addTo(routeLayer);
 
         traveledLine = L.polyline([], {
-            color: '#E2725B',
+            color: '#1A73E8',
             opacity: 0.95,
             weight: 5,
         }).addTo(routeLayer);
@@ -320,7 +352,7 @@ function initializeFleetHistoryPlayback() {
         currentIndex = 0;
 
         window.requestAnimationFrame(() => {
-            initializeMap();
+            initializeMap(payload.traffic);
             drawRoute();
 
             window.setTimeout(() => {

@@ -5,6 +5,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FleetController;
 use App\Http\Controllers\FleetHistoryController;
+use App\Http\Controllers\FleetTransactionController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\SummaryReportController;
 use Illuminate\Support\Facades\Route;
@@ -56,6 +57,9 @@ Route::post('summary-reports', [SummaryReportController::class, 'generate'])->na
 Route::get('fleet-histories', [FleetHistoryController::class, 'index'])->name('fleet-histories.index');
 Route::get('fleet-histories/fleets', [FleetHistoryController::class, 'fleets'])->name('fleet-histories.fleets');
 Route::post('fleet-histories', [FleetHistoryController::class, 'generate'])->name('fleet-histories.generate');
+Route::get('fleet-transactions/data', [FleetTransactionController::class, 'data'])->name('fleet-transactions.data');
+Route::post('fleet-transactions/import', [FleetTransactionController::class, 'import'])->name('fleet-transactions.import');
+Route::resource('fleet-transactions', FleetTransactionController::class)->except('show');
 
 // Logout (placeholder)
 Route::post('/logout', function () {

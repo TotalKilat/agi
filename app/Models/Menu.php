@@ -22,6 +22,7 @@ class Menu extends Model
         'inactive',
         'link',
         'menu',
+        'receipt',
         'settings',
         'truck',
     ];

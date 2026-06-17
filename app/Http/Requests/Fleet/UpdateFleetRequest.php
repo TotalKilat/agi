@@ -15,6 +15,10 @@ class UpdateFleetRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
+            'has_fuel_sensor' => $this->boolean('has_fuel_sensor'),
+            'fuel_sensor_installed_at' => $this->boolean('has_fuel_sensor')
+                ? $this->input('fuel_sensor_installed_at')
+                : null,
             'is_active' => $this->boolean('is_active'),
         ]);
     }
@@ -34,6 +38,8 @@ class UpdateFleetRequest extends FormRequest
                     ->where(fn ($query) => $query->where('customer_id', $this->input('customer_id')))
                     ->ignore($fleet?->id),
             ],
+            'has_fuel_sensor' => ['boolean'],
+            'fuel_sensor_installed_at' => ['nullable', Rule::requiredIf($this->boolean('has_fuel_sensor')), 'date', 'before_or_equal:today'],
             'is_active' => ['boolean'],
         ];
     }

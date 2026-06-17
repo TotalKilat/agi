@@ -321,14 +321,14 @@
     justify-content: center;
     border: 3px solid #FFFFFF;
     border-radius: 9999px;
-    background: var(--color-burnt-peach);
-    box-shadow: 0 14px 28px rgba(78, 44, 35, 0.26);
+    background: #1A73E8;
+    box-shadow: 0 14px 28px rgba(26, 115, 232, 0.28);
 }
 
 .playback-vehicle-marker-shell::after {
     position: absolute;
     inset: -8px;
-    border: 1px solid rgba(226, 114, 91, 0.34);
+    border: 1px solid rgba(26, 115, 232, 0.34);
     border-radius: inherit;
     content: "";
 }
