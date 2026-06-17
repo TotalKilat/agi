@@ -8,6 +8,7 @@ use App\Http\Controllers\FleetController;
 use App\Http\Controllers\FleetHistoryController;
 use App\Http\Controllers\FleetTransactionController;
 use App\Http\Controllers\MenuController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SummaryReportController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -44,8 +45,9 @@ Route::middleware(['auth'])->group(function () {
     // Activity Log
     Route::view('/activity', 'pages.activity')->name('activity');
 
-    // Settings
-    Route::view('/settings', 'pages.settings')->name('settings');
+    // Application Settings
+    Route::get('/settings', [SettingController::class, 'edit'])->name('settings.edit');
+    Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
 
     // Sidebar menu management
     Route::get('menus/data', [MenuController::class, 'data'])->name('menus.data');

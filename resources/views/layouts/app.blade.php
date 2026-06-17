@@ -4,10 +4,17 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>@yield('title', 'Dashboard') — Agentix</title>
+  <title>@yield('title', 'Dashboard') — {{ $appSettings['app_name'] ?? 'Agentix' }}</title>
 
   {{-- Favicon --}}
-  <link rel="icon" type="image/svg+xml" href="{{ asset('assets/icons/favicon.svg') }}">
+  @php
+    $faviconUrl = app(\App\Services\SettingService::class)->url('app_favicon');
+  @endphp
+  @if ($faviconUrl)
+    <link rel="icon" type="image/{{ pathinfo($faviconUrl, PATHINFO_EXTENSION) === 'svg' ? 'svg+xml' : 'png' }}" href="{{ $faviconUrl }}">
+  @else
+    <link rel="icon" type="image/svg+xml" href="{{ asset('assets/icons/favicon.svg') }}">
+  @endif
 
   {{-- Fonts --}}
   <link rel="preconnect" href="https://fonts.googleapis.com">

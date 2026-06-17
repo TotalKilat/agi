@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Setting;
 use App\Models\User;
+use App\Services\SettingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +20,10 @@ class LoginController extends Controller
      */
     public function showLoginForm(): View
     {
-        return view('auth.login');
+        return view('auth.login', [
+            'appName' => Setting::get('app_name', config('app.name', 'Agentix')),
+            'appLogo' => app(SettingService::class)->url('app_logo'),
+        ]);
     }
 
     /**
