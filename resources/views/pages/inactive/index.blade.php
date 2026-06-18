@@ -356,7 +356,7 @@ document.addEventListener('DOMContentLoaded', function () {
     context.font = '24px Arial';
     context.fillText('Generated ' + generatedAt, margin, 184);
 
-    context.fillStyle = '#D14343';
+    context.fillStyle = '#9CA3AF';
     drawRoundedRect(context, width - margin - 190, 86, 190, 48, 24);
     context.fill();
     context.fillStyle = '#FFFFFF';
