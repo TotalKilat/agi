@@ -95,13 +95,12 @@
     </div>
   </x-modal>
 
-  <x-modal id="inactiveSnapshotModal" title="Inactive Fleet Snapshot" size="lg">
+  <x-modal id="inactiveSnapshotModal" title="Vehicle Non Active" size="lg">
     <div class="inactive-modal-shell">
       <div class="inactive-modal-header">
         <div>
           <span class="inactive-modal-eyebrow">Snapshot</span>
           <h3 class="inactive-modal-title" data-snapshot-customer-name>Customer</h3>
-          <p class="inactive-modal-subtitle" data-snapshot-customer-username>Username</p>
         </div>
         <span class="badge badge-neutral" data-snapshot-total>0 Vehicles</span>
       </div>
@@ -151,7 +150,6 @@ document.addEventListener('DOMContentLoaded', function () {
   };
   var snapshotElements = {
     customerName: snapshotModal.querySelector('[data-snapshot-customer-name]'),
-    customerUsername: snapshotModal.querySelector('[data-snapshot-customer-username]'),
     total: snapshotModal.querySelector('[data-snapshot-total]'),
     loading: snapshotModal.querySelector('[data-snapshot-loading]'),
     error: snapshotModal.querySelector('[data-snapshot-error]'),
@@ -300,7 +298,6 @@ document.addEventListener('DOMContentLoaded', function () {
       var row = [
         String(index + 1),
         vehicle.vehicle_name || '-',
-        vehicle.device_name || '-',
         vehicle.last_update || '-',
         vehicle.status || 'INACTIVE',
       ];
@@ -324,10 +321,9 @@ document.addEventListener('DOMContentLoaded', function () {
     var tableWidth = width - margin * 2;
     var columns = [
       { label: 'No', width: 80 },
-      { label: 'Vehicle Name', width: 360 },
-      { label: 'Device Name', width: 300 },
-      { label: 'Last Update', width: 290 },
-      { label: 'Status', width: 254 },
+      { label: 'Vehicle Name', width: 460 },
+      { label: 'Last Update', width: 340 },
+      { label: 'Status', width: 404 },
     ];
     var rows = measureSnapshotRows(context, vehicles, columns);
     var headerHeight = 220;
@@ -353,12 +349,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     context.fillStyle = '#4E2C23';
     context.font = '700 42px Arial';
-    context.fillText('Non Active Fleet Snapshot', margin, 98);
+    context.fillText('Vehicle Non Active', margin, 98);
     context.font = '700 30px Arial';
     context.fillText(customer.name || 'Customer', margin, 145);
     context.fillStyle = '#72584F';
     context.font = '24px Arial';
-    context.fillText((customer.username || 'Username') + ' • Generated ' + generatedAt, margin, 184);
+    context.fillText('Generated ' + generatedAt, margin, 184);
 
     context.fillStyle = '#D14343';
     drawRoundedRect(context, width - margin - 190, 86, 190, 48, 24);
@@ -406,7 +402,7 @@ document.addEventListener('DOMContentLoaded', function () {
         row.values.forEach(function (value, columnIndex) {
           var column = columns[columnIndex];
 
-          if (columnIndex === 4) {
+          if (columnIndex === 3) {
             context.fillStyle = '#D14343';
             drawRoundedRect(context, columnX + 14, y + 17, 128, 32, 16);
             context.fill();
@@ -446,10 +442,8 @@ document.addEventListener('DOMContentLoaded', function () {
   async function createSnapshot(trigger) {
     var customer = {
       name: trigger.dataset.customerName || 'Customer',
-      username: trigger.dataset.customerUsername || 'Username',
     };
     setText(snapshotElements.customerName, customer.name);
-    setText(snapshotElements.customerUsername, customer.username);
     setText(snapshotElements.total, 'Creating...');
     setHidden(snapshotElements.loading, false);
     setHidden(snapshotElements.error, true);
@@ -474,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function () {
       blob: blob,
       fileName: fileName,
       message: message,
-      title: 'Inactive Fleet Snapshot',
+      title: 'Vehicle Non Active',
     };
 
     snapshotElements.preview.src = canvas.toDataURL('image/png');
