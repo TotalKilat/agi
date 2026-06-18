@@ -4,6 +4,15 @@
 @section('page-title', 'Non Active Fleet')
 @section('crud-assets', 'true')
 
+@push('styles')
+<style>
+  #inactiveFleetModal .modal,
+  #inactiveSnapshotModal .modal {
+    max-width: 960px !important;
+  }
+</style>
+@endpush
+
 @section('content')
 <div
   class="page-section active js-crud-page"
@@ -55,7 +64,7 @@
     </div>
   </div>
 
-  <x-modal id="inactiveFleetModal" title="Inactive Fleets" size="lg">
+  <x-modal id="inactiveFleetModal" title="Inactive Fleets" size="xl">
     <div class="inactive-modal-shell">
       <div class="inactive-modal-header">
         <div>
@@ -96,7 +105,7 @@
     </div>
   </x-modal>
 
-  <x-modal id="inactiveSnapshotModal" title="Vehicle Non Active" size="lg">
+  <x-modal id="inactiveSnapshotModal" title="Vehicle Non Active" size="xl">
     <div class="inactive-modal-shell">
       <div class="inactive-modal-header">
         <div>
@@ -242,6 +251,24 @@ document.addEventListener('DOMContentLoaded', function () {
       || 'customer';
   }
 
+  function breakLongWord(context, word, maxWidth) {
+    var parts = [];
+    var part = '';
+    for (var i = 0; i < word.length; i++) {
+      var test = part + word[i];
+      if (context.measureText(test).width > maxWidth && part) {
+        parts.push(part);
+        part = word[i];
+      } else {
+        part = test;
+      }
+    }
+    if (part) {
+      parts.push(part);
+    }
+    return parts;
+  }
+
   function wrapText(context, text, maxWidth) {
     var words = String(text || '-').split(/\s+/);
     var lines = [];
@@ -252,9 +279,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
       if (context.measureText(testLine).width > maxWidth && line) {
         lines.push(line);
-        line = word;
+        line = '';
+      }
+
+      if (context.measureText(word).width > maxWidth) {
+        var broken = breakLongWord(context, word, maxWidth);
+        broken.forEach(function (part, idx) {
+          if (idx === 0 && line) {
+            var combined = line + ' ' + part;
+            if (context.measureText(combined).width <= maxWidth) {
+              line = combined;
+            } else {
+              lines.push(line);
+              line = part;
+            }
+          } else if (idx === broken.length - 1) {
+            line = part;
+          } else {
+            lines.push(part);
+          }
+        });
       } else {
-        line = testLine;
+        line = line ? line + ' ' + word : word;
       }
     });
 

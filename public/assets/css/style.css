@@ -1407,6 +1407,22 @@ body {
   transform: translateY(0);
 }
 
+.modal-sm {
+  max-width: 380px !important;
+}
+
+.modal-lg {
+  max-width: 720px !important;
+}
+
+.modal-xl {
+  max-width: 960px !important;
+}
+
+.modal-full {
+  max-width: 95vw !important;
+}
+
 .modal-header {
   display: flex;
   align-items: center;
