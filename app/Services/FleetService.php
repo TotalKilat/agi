@@ -322,15 +322,17 @@ class FleetService
     }
 
     /**
-     * Format mileage as a whole number of thousands to keep the fleet listing concise.
+     * Format mileage as a whole number with periods as thousands separators.
      */
     private function formatMileage(float $mileage): string
     {
-        return floor($mileage / 1000).' ribu km';
+        $formattedMileage = number_format(floor($mileage), 0, '', '.');
+
+        return $formattedMileage.' km';
     }
 
     /**
-     * Format legacy saved mileage values that still contain a comma-separated value.
+     * Format legacy saved mileage values to the current thousands separator format.
      *
      * @return array{text: string, state?: string}
      */
@@ -342,11 +344,22 @@ class FleetService
             return $snapshot;
         }
 
-        if (preg_match('/^([\d,]+(?:\.\d+)?)\s*km$/i', $snapshot['text'], $matches) !== 1) {
-            return $snapshot;
+        if (
+            preg_match('/^([\d,]+(?:\.\d+)?)\s*km$/i', $snapshot['text'], $matches) === 1
+            && str_contains($matches[1], ',')
+        ) {
+            return ['text' => $this->formatMileage((float) str_replace(',', '', $matches[1]))];
         }
 
-        return ['text' => $this->formatMileage((float) str_replace(',', '', $matches[1]))];
+        if (preg_match('/^(\d+)\s+ribu\s+km$/i', $snapshot['text'], $matches) === 1) {
+            return ['text' => $this->formatMileage((float) $matches[1] * 1000)];
+        }
+
+        if (preg_match('/^(\d{4,})(?:\.\d{1,3})?\s*km$/i', $snapshot['text'], $matches) === 1) {
+            return ['text' => $this->formatMileage((float) $matches[0])];
+        }
+
+        return $snapshot;
     }
 
     private function vehicleStatusBadge(string $status): string
