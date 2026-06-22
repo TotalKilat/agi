@@ -67,7 +67,7 @@ class FleetTransactionController extends Controller
             ->addColumn('refuel_l', fn(FleetTransaction $transaction) => $this->formatNullableNumber($transaction->refuel_l, 2, ' L'))
             ->addColumn('km_per_l', fn(FleetTransaction $transaction) => $this->formatNullableNumber($transaction->km_per_l, 2, ' km/L'))
             ->addColumn('l_per_km', fn(FleetTransaction $transaction) => $this->formatNullableNumber($transaction->l_per_km, 2, ' L/km'))
-            ->addColumn('status', fn(FleetTransaction $transaction) => $this->formatEfficiencyStatus($transaction->km_per_l))
+            ->addColumn('status', fn(FleetTransaction $transaction) => $this->formatEfficiencyStatus($transaction))
             ->addColumn('running_duration', fn(FleetTransaction $transaction) => $this->formatDuration($transaction->running_duration_seconds))
             ->addColumn('idle_duration', fn(FleetTransaction $transaction) => $this->formatDuration($transaction->idle_duration_seconds))
             ->addColumn('stop_duration', fn(FleetTransaction $transaction) => $this->formatDuration($transaction->stop_duration_seconds))
@@ -211,8 +211,14 @@ class FleetTransactionController extends Controller
         return sprintf('%02d:%02d:%02d', $hours, $minutes, $remainingSeconds);
     }
 
-    private function formatEfficiencyStatus(mixed $kmPerLiter): string
+    private function formatEfficiencyStatus(FleetTransaction $transaction): string
     {
+        if ($transaction->fleet?->has_fuel_sensor !== true) {
+            return '<span class="badge text-bg-secondary">Fuel Sensor belum terpasang</span>';
+        }
+
+        $kmPerLiter = $transaction->km_per_l;
+
         if ($kmPerLiter === null || $kmPerLiter === '') {
             return '—';
         }

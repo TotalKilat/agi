@@ -51,12 +51,15 @@
 
 .data-table-container .dt-layout-table {
     overflow-x: auto;
+    overflow-y: hidden;
     border: 1px solid var(--color-border-light);
     border-radius: var(--radius-lg);
 }
 
 .data-table-container table.dataTable {
     margin: 0 !important;
+    width: max-content !important;
+    min-width: 100% !important;
 }
 
 .data-table-container table.dataTable thead th {
@@ -67,6 +70,27 @@
 .data-table-container table.dataTable tbody td {
     border-bottom: 1px solid var(--color-border-light);
     text-align: left;
+}
+
+#fleetTable.dataTable thead th,
+#fleetTable.dataTable tbody td,
+#fleetTransactionTable.dataTable thead th,
+#fleetTransactionTable.dataTable tbody td {
+    min-width: 140px;
+}
+
+#fleetTable.dataTable thead th:nth-child(1),
+#fleetTable.dataTable tbody td:nth-child(1),
+#fleetTransactionTable.dataTable thead th:nth-child(1),
+#fleetTransactionTable.dataTable tbody td:nth-child(1) {
+    min-width: 56px;
+}
+
+#fleetTable.dataTable thead th:nth-child(2),
+#fleetTable.dataTable tbody td:nth-child(2),
+#fleetTransactionTable.dataTable thead th:nth-child(2),
+#fleetTransactionTable.dataTable tbody td:nth-child(2) {
+    min-width: 88px;
 }
 
 .data-table-container table.dataTable .table-cell-center {

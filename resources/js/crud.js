@@ -607,6 +607,8 @@ function initializeDataTable(tableElement, page) {
     const table = new DataTable(tableElement, {
         processing: true,
         serverSide: true,
+        scrollX: true,
+        autoWidth: false,
         ajax: tableElement.dataset.url,
         order: parseJson(tableElement.dataset.order, [[1, 'asc']]),
         pageLength: Number(tableElement.dataset.pageLength || 10),
