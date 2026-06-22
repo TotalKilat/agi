@@ -16,7 +16,6 @@ class FleetService
 {
     public function __construct(
         private readonly TotalKilatGpsService $gpsService,
-        private readonly NominatimReverseGeocodingService $reverseGeocodingService,
     ) {}
 
     /**
@@ -259,7 +258,8 @@ class FleetService
      *     latitude: float,
      *     longitude: float,
      *     acc: int,
-     *     status_icon: int
+     *     status_icon: int,
+     *     location: string
      * }  $position
      * @return array<string, array<string, mixed>>
      */
@@ -274,11 +274,7 @@ class FleetService
         $engineOn = $position['acc'] === 1;
         $latitude = $position['latitude'];
         $longitude = $position['longitude'];
-        $address = trim((string) ($fleet?->latest_address ?? ''));
-
-        if ($address === '' && (bool) config('services.total_kilat_gps.resolve_addresses_on_refresh', true)) {
-            $address = $this->reverseGeocodingService->execute($latitude, $longitude);
-        }
+        $address = trim((string) ($position['location'] ?? ''));
 
         return [
             'mileage' => [
@@ -301,7 +297,7 @@ class FleetService
             ],
             'map' => [
                 'url' => sprintf(
-                    'https://maps.google.com/maps?q=%s,%s&z=16&output=embed',
+                    'https://maps.google.com/maps?q=%s,%s&z=16&t=k&output=embed',
                     rawurlencode((string) $latitude),
                     rawurlencode((string) $longitude),
                 ),

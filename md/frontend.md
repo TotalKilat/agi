@@ -633,8 +633,8 @@ Runtime `crud.js` akan:
 - menjalankan proses kembali pada pagination, search, order, dan page length.
 
 Field enrichment berupa alamat panjang menggunakan class global
-`enrichment-address` agar dapat wrap. Jika alamat menggunakan data OpenStreetMap,
-letakkan atribusi `.table-attribution` di bawah tabel.
+`enrichment-address` agar dapat wrap. Alamat diambil langsung dari field `location`
+response API Total Kilat GPS.
 
 Reference harus berupa nilai opaque/HMAC. Jangan menaruh ULID dalam atribut DOM
 atau payload enrichment.

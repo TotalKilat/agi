@@ -68,12 +68,6 @@
           <tbody></tbody>
         </table>
       </div>
-      <p class="table-attribution">
-        Address data ©
-        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">
-          OpenStreetMap contributors
-        </a>
-      </p>
     </div>
   </div>
 
@@ -136,7 +130,7 @@
     </form>
   </x-modal>
 
-  <x-modal id="fleetMapModal" title="Vehicle Location" size="lg">
+  <x-modal id="fleetMapModal" title="Vehicle Location" size="xxl">
     <div class="map-modal-shell">
       <div class="map-modal-hero">
         <div class="map-modal-title-block">

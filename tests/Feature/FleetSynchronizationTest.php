@@ -29,7 +29,6 @@ class FleetSynchronizationTest extends TestCase
             ->assertSee('data-map-address', false)
             ->assertDontSee('Fleet Status')
             ->assertSee('Address')
-            ->assertSee('OpenStreetMap contributors')
             ->assertSee($customer->name)
             ->assertSee($customer->username)
             ->assertDontSee($customer->password);
@@ -513,21 +512,9 @@ class FleetSynchronizationTest extends TestCase
         $secondFleet = $this->createFleet($customer, 'B 1071 DFP', '42976836');
         $tokenRequests = 0;
         $positionRequests = 0;
-        $addressRequests = 0;
 
-        Http::fake(function (Request $request) use (&$tokenRequests, &$positionRequests, &$addressRequests) {
+        Http::fake(function (Request $request) use (&$tokenRequests, &$positionRequests) {
             $query = $this->queryParameters($request);
-            $host = parse_url($request->url(), PHP_URL_HOST);
-
-            if ($host === 'nominatim.openstreetmap.org') {
-                $addressRequests++;
-                $this->assertSame('-0.47737', (string) $query['lat']);
-                $this->assertSame('117.137335', (string) $query['lon']);
-
-                return Http::response([
-                    'display_name' => 'Jalan Pangeran Antasari, Samarinda, Kalimantan Timur, Indonesia',
-                ]);
-            }
 
             if (str_ends_with(parse_url($request->url(), PHP_URL_PATH), '/token')) {
                 $tokenRequests++;
@@ -555,6 +542,7 @@ class FleetSynchronizationTest extends TestCase
                     'longitude' => 117.137335,
                     'acc' => 0,
                     'statusIcon' => 2,
+                    'location' => 'Jalan Pangeran Antasari, Samarinda, Kalimantan Timur, Indonesia',
                 ],
             ]])));
         });
@@ -577,7 +565,7 @@ class FleetSynchronizationTest extends TestCase
             )
             ->assertJsonPath(
                 "data.{$firstReference}.map.url",
-                'https://maps.google.com/maps?q=-0.47737,117.137335&z=16&output=embed',
+                'https://maps.google.com/maps?q=-0.47737,117.137335&z=16&t=k&output=embed',
             )
             ->assertJsonPath("data.{$firstReference}.map.latitude", -0.47737)
             ->assertJsonPath("data.{$firstReference}.map.longitude", 117.137335)
@@ -588,7 +576,6 @@ class FleetSynchronizationTest extends TestCase
 
         $this->assertSame(1, $tokenRequests);
         $this->assertSame(2, $positionRequests);
-        $this->assertSame(1, $addressRequests);
         $this->assertDatabaseHas('fleets', [
             'id' => $firstFleet->id,
             'latest_address' => 'Jalan Pangeran Antasari, Samarinda, Kalimantan Timur, Indonesia',

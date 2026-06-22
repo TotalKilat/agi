@@ -57,7 +57,8 @@ class TotalKilatGpsService
      *     latitude: float,
      *     longitude: float,
      *     acc: int,
-     *     status_icon: int
+     *     status_icon: int,
+     *     location: string
      * }>
      */
     public function getLatestPositions(Customer $customer, array $deviceNames): array
@@ -490,7 +491,8 @@ class TotalKilatGpsService
      *     latitude: float,
      *     longitude: float,
      *     acc: int,
-     *     status_icon: int
+     *     status_icon: int,
+     *     location: string
      * }|null
      */
     private function normalizeLatestPosition(array $payload, string $deviceName): ?array
@@ -537,6 +539,7 @@ class TotalKilatGpsService
             'longitude' => (float) Arr::get($position, 'longitude'),
             'acc' => (int) Arr::get($position, 'acc', 0),
             'status_icon' => (int) Arr::get($position, 'statusIcon', 0),
+            'location' => trim((string) Arr::get($position, 'location', '')),
         ];
     }
 

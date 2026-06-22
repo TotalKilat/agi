@@ -177,13 +177,7 @@ Konfigurasi jumlah concurrent request dan TTL posisi berada di
 `config/services.php`. Kegagalan satu device menghasilkan status unavailable dan
 tidak menggagalkan posisi device lain.
 
-Reverse geocoding alamat harus menggunakan service provider terpisah:
-
-- proses hanya koordinat row DataTable yang sedang terlihat;
-- cache hasil berdasarkan koordinat yang dibulatkan;
-- kegagalan reverse geocoding tidak menggagalkan data GPS;
-- ambil alamat dari field `display_name` response Nominatim;
-- tampilkan atribusi OpenStreetMap pada UI jika datanya bersumber dari OSM.
+Alamat diambil langsung dari field `location` pada response API latest vehicle position dari Total Kilat GPS.
 
 Mapping status GPS fleet:
 
