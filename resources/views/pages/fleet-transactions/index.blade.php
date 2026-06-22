@@ -107,7 +107,8 @@
                 @csrf
                 <div class="modal-body">
                     <p class="text-sm text-gray-600">
-                        Sistem akan menghitung ulang nilai <strong>KM/L</strong> dan <strong>L/KM</strong> untuk semua data transaksi
+                        Sistem akan menghitung ulang nilai <strong>KM/L</strong> dan <strong>L/KM</strong> untuk semua data
+                        transaksi
                         yang sudah ter-upload.
                     </p>
                     <div class="form-hint" style="margin-top: 10px;">
