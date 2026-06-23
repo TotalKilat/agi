@@ -29,7 +29,68 @@ class FleetTransactionController extends Controller
 
     public function data(): JsonResponse
     {
-        return DataTables::eloquent($this->fleetTransactionService->getDataTableQuery())
+        $query = $this->fleetTransactionService->getDataTableQuery();
+
+        $fleetName = trim((string) request()->input('fleet_name'));
+        if ($fleetName !== '') {
+            $query->where('fleet_transactions.vehicle_name_snapshot', 'like', "%{$fleetName}%");
+        }
+
+        $customerName = trim((string) request()->input('customer_name'));
+        if ($customerName !== '') {
+            $query->whereHas('fleet.customer', function (Builder $query) use ($customerName): void {
+                $query->where('name', 'like', "%{$customerName}%");
+            });
+        }
+
+        $transactionDateStart = trim((string) request()->input('transaction_date_start'));
+        if ($transactionDateStart !== '') {
+            $query->whereDate('fleet_transactions.transaction_date', '>=', $transactionDateStart);
+        }
+
+        $transactionDateEnd = trim((string) request()->input('transaction_date_end'));
+        if ($transactionDateEnd !== '') {
+            $query->whereDate('fleet_transactions.transaction_date', '<=', $transactionDateEnd);
+        }
+
+        $this->applyNumericRangeFilter($query, 'fleet_transactions.odometer_km', 'odometer_min', 'odometer_max');
+        $this->applyNumericRangeFilter($query, 'fleet_transactions.usage_l', 'usage_min', 'usage_max');
+        $this->applyNumericRangeFilter($query, 'fleet_transactions.cost_rp', 'cost_min', 'cost_max');
+        $this->applyNumericRangeFilter($query, 'fleet_transactions.refuel_l', 'refuel_min', 'refuel_max');
+        $this->applyNumericRangeFilter($query, 'fleet_transactions.km_per_l', 'km_per_l_min', 'km_per_l_max');
+        $this->applyNumericRangeFilter($query, 'fleet_transactions.l_per_km', 'l_per_km_min', 'l_per_km_max');
+
+        $efficiencyStatus = trim((string) request()->input('efficiency_status'));
+        if ($efficiencyStatus === 'normal') {
+            $query
+                ->whereHas('fleet', fn (Builder $query) => $query->where('has_fuel_sensor', true))
+                ->whereBetween('fleet_transactions.km_per_l', [2.5, 4.5]);
+        }
+
+        if ($efficiencyStatus === 'abnormal') {
+            $query
+                ->whereHas('fleet', fn (Builder $query) => $query->where('has_fuel_sensor', true))
+                ->whereNotNull('fleet_transactions.km_per_l')
+                ->where(function (Builder $query): void {
+                    $query
+                        ->where('fleet_transactions.km_per_l', '<', 2.5)
+                        ->orWhere('fleet_transactions.km_per_l', '>', 4.5);
+                });
+        }
+
+        if ($efficiencyStatus === 'no_sensor') {
+            $query->whereHas('fleet', function (Builder $query): void {
+                $query->where('has_fuel_sensor', false)->orWhereNull('has_fuel_sensor');
+            });
+        }
+
+        if ($efficiencyStatus === 'no_data') {
+            $query
+                ->whereHas('fleet', fn (Builder $query) => $query->where('has_fuel_sensor', true))
+                ->whereNull('fleet_transactions.km_per_l');
+        }
+
+        return DataTables::eloquent($query)
             ->filter(function (Builder $query): void {
                 $keyword = trim((string) request()->input('search.value'));
 
@@ -204,6 +265,47 @@ class FleetTransactionController extends Controller
             ->with('customer')
             ->orderBy('vehicle_name')
             ->get(['id', 'customer_id', 'vehicle_name', 'device_name']);
+    }
+
+    private function applyNumericRangeFilter(Builder $query, string $column, string $minInput, string $maxInput): void
+    {
+        $minValue = $this->parseNullableDecimal(request()->input($minInput));
+        if ($minValue !== null) {
+            $query->where($column, '>=', $minValue);
+        }
+
+        $maxValue = $this->parseNullableDecimal(request()->input($maxInput));
+        if ($maxValue !== null) {
+            $query->where($column, '<=', $maxValue);
+        }
+    }
+
+    private function parseNullableDecimal(mixed $value): ?float
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = trim((string) $value);
+
+        if ($normalized === '') {
+            return null;
+        }
+
+        $normalized = str_replace(' ', '', $normalized);
+
+        if (str_contains($normalized, ',') && str_contains($normalized, '.')) {
+            $normalized = str_replace('.', '', $normalized);
+            $normalized = str_replace(',', '.', $normalized);
+        } else {
+            $normalized = str_replace(',', '.', $normalized);
+        }
+
+        if (! is_numeric($normalized)) {
+            return null;
+        }
+
+        return (float) $normalized;
     }
 
     private function formatNumber(mixed $value, int $precision): string

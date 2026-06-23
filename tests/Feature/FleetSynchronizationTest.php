@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Http\Requests\Fleet\SyncFleetRequest;
 use App\Models\Customer;
 use App\Models\Fleet;
+use App\Models\FleetType;
+use App\Models\Location;
 use App\Models\User;
 use App\Services\FleetService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -201,6 +203,49 @@ class FleetSynchronizationTest extends TestCase
                 ->assertSee('B 1071 DFP')
                 ->assertDontSee('B 1075 DFP');
         }
+    }
+
+    public function test_fleet_datatable_can_be_filtered_by_fleet_type_and_location(): void
+    {
+        $customer = $this->createCustomer();
+        $dumpTruck = FleetType::query()->create(['name' => 'Dump Truck']);
+        $supportTruck = FleetType::query()->create(['name' => 'Support Truck']);
+        $samarinda = Location::query()->create(['name' => 'Samarinda']);
+        $balikpapan = Location::query()->create(['name' => 'Balikpapan']);
+
+        $matchingFleet = $this->createFleet($customer, 'B 1071 DFP', '42976836');
+        $matchingFleet->update([
+            'fleet_type_id' => $dumpTruck->id,
+            'location_id' => $samarinda->id,
+        ]);
+        $this->createFleet($customer, 'B 1075 DFP', '42995737')->update([
+            'fleet_type_id' => $supportTruck->id,
+            'location_id' => $samarinda->id,
+        ]);
+        $this->createFleet($customer, 'B 1080 DFP', '42995738')->update([
+            'fleet_type_id' => $dumpTruck->id,
+            'location_id' => $balikpapan->id,
+        ]);
+
+        $this->get(route('fleets.index'))
+            ->assertOk()
+            ->assertSee('filterFleetType', false)
+            ->assertSee('filterLocation', false)
+            ->assertSee('Dump Truck')
+            ->assertSee('Samarinda');
+
+        $this->getJson(route('fleets.data', [
+            'draw' => 1,
+            'start' => 0,
+            'length' => 10,
+            'fleet_type_id' => $dumpTruck->id,
+            'location_id' => $samarinda->id,
+        ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertSee('B 1071 DFP')
+            ->assertDontSee('B 1075 DFP')
+            ->assertDontSee('B 1080 DFP');
     }
 
     public function test_customer_user_can_only_view_and_manage_own_fleets(): void

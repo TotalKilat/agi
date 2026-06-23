@@ -9,6 +9,8 @@ use App\Http\Requests\Fleet\SyncFleetRequest;
 use App\Http\Requests\Fleet\UpdateFleetRequest;
 use App\Models\Customer;
 use App\Models\Fleet;
+use App\Models\FleetType;
+use App\Models\Location;
 use App\Services\FleetService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -33,6 +35,8 @@ class FleetController extends Controller
 
         return view('pages.fleets.index', [
             'syncCustomers' => $this->fleetService->getSyncCustomers($customerId),
+            'fleetTypes' => $this->fleetTypes(),
+            'locations' => $this->locations(),
             'customers' => Customer::query()
                 ->where('is_active', true)
                 ->when($customerId !== null, fn(Builder $query) => $query->whereKey($customerId))
@@ -58,6 +62,16 @@ class FleetController extends Controller
             $query->where('fleets.fuel_sensor_status', $fuelSensorStatus);
         }
 
+        $fleetTypeId = request()->input('fleet_type_id');
+        if ($fleetTypeId !== null && $fleetTypeId !== '') {
+            $query->where('fleets.fleet_type_id', $fleetTypeId);
+        }
+
+        $locationId = request()->input('location_id');
+        if ($locationId !== null && $locationId !== '') {
+            $query->where('fleets.location_id', $locationId);
+        }
+
         return DataTables::eloquent($query)
             ->filter(function (Builder $query): void {
                 $keyword = trim((string) request()->input('search.value'));
@@ -77,6 +91,12 @@ class FleetController extends Controller
                         ->orWhere('fleets.latest_engine', 'like', "%{$keyword}%")
                         ->orWhere('fleets.latest_update', 'like', "%{$keyword}%")
                         ->orWhereHas('customer', function (Builder $query) use ($keyword): void {
+                            $query->where('name', 'like', "%{$keyword}%");
+                        })
+                        ->orWhereHas('fleetType', function (Builder $query) use ($keyword): void {
+                            $query->where('name', 'like', "%{$keyword}%");
+                        })
+                        ->orWhereHas('location', function (Builder $query) use ($keyword): void {
                             $query->where('name', 'like', "%{$keyword}%");
                         });
 
@@ -106,6 +126,14 @@ class FleetController extends Controller
             ->addColumn(
                 'customer_name',
                 fn(Fleet $fleet) => $fleet->customer?->name ?? '—',
+            )
+            ->addColumn(
+                'fleet_type_name',
+                fn(Fleet $fleet) => $fleet->fleetType?->name ?? '—',
+            )
+            ->addColumn(
+                'location_name',
+                fn(Fleet $fleet) => $fleet->location?->name ?? '—',
             )
             ->addColumn(
                 'fuel_sensor',
@@ -151,6 +179,8 @@ class FleetController extends Controller
                 'vehicle_name',
                 'device_name',
                 'customer_name',
+                'fleet_type_name',
+                'location_name',
                 'fuel_sensor',
                 'fuel_sensor_installed_at',
                 'fuel_sensor_status',
@@ -209,7 +239,11 @@ class FleetController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('pages.fleets.create', compact('customers'));
+        return view('pages.fleets.create', [
+            'customers' => $customers,
+            'fleetTypes' => $this->fleetTypes(),
+            'locations' => $this->locations(),
+        ]);
     }
 
     /**
@@ -288,7 +322,12 @@ class FleetController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('pages.fleets.edit', compact('fleet', 'customers'));
+        return view('pages.fleets.edit', [
+            'fleet' => $fleet,
+            'customers' => $customers,
+            'fleetTypes' => $this->fleetTypes(),
+            'locations' => $this->locations(),
+        ]);
     }
 
     /**
@@ -345,6 +384,20 @@ class FleetController extends Controller
     private function customerScope(): ?string
     {
         return auth()->user()?->customer_id;
+    }
+
+    private function fleetTypes()
+    {
+        return FleetType::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
+    private function locations()
+    {
+        return Location::query()
+            ->orderBy('name')
+            ->get(['id', 'name']);
     }
 
     private function ensureCustomerAccess(Customer $customer): void

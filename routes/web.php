@@ -6,8 +6,10 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FleetController;
 use App\Http\Controllers\FleetHistoryController;
+use App\Http\Controllers\FleetTypeController;
 use App\Http\Controllers\FleetTransactionController;
 use App\Http\Controllers\InactiveFleetController;
+use App\Http\Controllers\LocationController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SummaryReportController;
@@ -63,6 +65,10 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('users', UserController::class)->except('show');
 
     // Fleet management
+    Route::get('locations/data', [LocationController::class, 'data'])->name('locations.data');
+    Route::resource('locations', LocationController::class)->except('show');
+    Route::get('fleet-types/data', [FleetTypeController::class, 'data'])->name('fleet-types.data');
+    Route::resource('fleet-types', FleetTypeController::class)->except('show');
     Route::get('fleets/data', [FleetController::class, 'data'])->name('fleets.data');
     Route::post('fleets/latest-positions', [FleetController::class, 'latestPositions'])->name('fleets.latest-positions');
     Route::post('fleets/sync', [FleetController::class, 'sync'])->name('fleets.sync');

@@ -5,6 +5,8 @@
   $hasFuelSensor = old('has_fuel_sensor', $fleet->has_fuel_sensor ?? false);
   $fuelSensorStatus = old('fuel_sensor_status', $fleet->fuel_sensor_status ?? 'inactive');
   $selectedCustomer = old('customer_id', $fleet->customer_id ?? '');
+  $selectedFleetType = old('fleet_type_id', $fleet->fleet_type_id ?? '');
+  $selectedLocation = old('location_id', $fleet->location_id ?? '');
   $fuelSensorInstalledAt = old(
       'fuel_sensor_installed_at',
       isset($fleet?->fuel_sensor_installed_at) ? $fleet->fuel_sensor_installed_at->format('Y-m-d') : ''
@@ -33,6 +35,28 @@
       @endforeach
     </select>
     @error('customer_id') <div class="form-error">{{ $message }}</div> @enderror
+  </div>
+
+  <div class="form-group">
+    <label for="fleet_type_id" class="form-label">Fleet Type</label>
+    <select name="fleet_type_id" id="fleet_type_id" class="form-select js-select2 @error('fleet_type_id') form-input-error @enderror" data-placeholder="Select a fleet type...">
+      <option value="">Select a fleet type...</option>
+      @foreach($fleetTypes as $fleetType)
+        <option value="{{ $fleetType->id }}" @selected($selectedFleetType === $fleetType->id)>{{ $fleetType->name }}</option>
+      @endforeach
+    </select>
+    @error('fleet_type_id') <div class="form-error">{{ $message }}</div> @enderror
+  </div>
+
+  <div class="form-group">
+    <label for="location_id" class="form-label">Location</label>
+    <select name="location_id" id="location_id" class="form-select js-select2 @error('location_id') form-input-error @enderror" data-placeholder="Select a location...">
+      <option value="">Select a location...</option>
+      @foreach($locations as $location)
+        <option value="{{ $location->id }}" @selected($selectedLocation === $location->id)>{{ $location->name }}</option>
+      @endforeach
+    </select>
+    @error('location_id') <div class="form-error">{{ $message }}</div> @enderror
   </div>
 
   <div class="form-group">

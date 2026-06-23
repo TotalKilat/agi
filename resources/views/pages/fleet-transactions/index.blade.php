@@ -47,6 +47,94 @@
                     </div>
                 </div>
 
+                <div class="transaction-filter-bar" id="fleetTransactionFilterBar">
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterTransactionFleet">Fleet</label>
+                        <input type="text" id="filterTransactionFleet" class="transaction-filter-input"
+                            placeholder="Nama fleet">
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterTransactionCustomer">Customer</label>
+                        <input type="text" id="filterTransactionCustomer" class="transaction-filter-input"
+                            placeholder="Nama customer">
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterTransactionDateStart">Date From</label>
+                        <input type="date" id="filterTransactionDateStart" class="transaction-filter-input">
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterTransactionDateEnd">Date To</label>
+                        <input type="date" id="filterTransactionDateEnd" class="transaction-filter-input">
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterTransactionStatus">Status</label>
+                        <select id="filterTransactionStatus" class="transaction-filter-select">
+                            <option value="">Semua</option>
+                            <option value="normal">Wajar</option>
+                            <option value="abnormal">Tidak Wajar</option>
+                            <option value="no_sensor">Fuel Sensor Belum Terpasang</option>
+                            <option value="no_data">KM/L Belum Ada</option>
+                        </select>
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterOdometerMin">Odometer Min</label>
+                        <input type="text" id="filterOdometerMin" class="transaction-filter-input" placeholder="0">
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterOdometerMax">Odometer Max</label>
+                        <input type="text" id="filterOdometerMax" class="transaction-filter-input" placeholder="1000">
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterUsageMin">Usage Min (L)</label>
+                        <input type="text" id="filterUsageMin" class="transaction-filter-input" placeholder="0">
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterUsageMax">Usage Max (L)</label>
+                        <input type="text" id="filterUsageMax" class="transaction-filter-input" placeholder="100">
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterCostMin">Cost Min (Rp)</label>
+                        <input type="text" id="filterCostMin" class="transaction-filter-input" placeholder="0">
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterCostMax">Cost Max (Rp)</label>
+                        <input type="text" id="filterCostMax" class="transaction-filter-input" placeholder="1000000">
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterRefuelMin">Refuel Min (L)</label>
+                        <input type="text" id="filterRefuelMin" class="transaction-filter-input" placeholder="0">
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterRefuelMax">Refuel Max (L)</label>
+                        <input type="text" id="filterRefuelMax" class="transaction-filter-input" placeholder="100">
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterKmPerLMin">KM/L Min</label>
+                        <input type="text" id="filterKmPerLMin" class="transaction-filter-input" placeholder="0">
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterKmPerLMax">KM/L Max</label>
+                        <input type="text" id="filterKmPerLMax" class="transaction-filter-input" placeholder="10">
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterLPerKmMin">L/KM Min</label>
+                        <input type="text" id="filterLPerKmMin" class="transaction-filter-input" placeholder="0">
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterLPerKmMax">L/KM Max</label>
+                        <input type="text" id="filterLPerKmMax" class="transaction-filter-input" placeholder="1">
+                    </div>
+                    <div class="transaction-filter-actions">
+                        <button type="button" id="applyFleetTransactionFilter" class="transaction-filter-apply">
+                            Terapkan Filter
+                        </button>
+                        <button type="button" id="resetFleetTransactionFilter" class="transaction-filter-reset"
+                            style="display:none">
+                            Reset
+                        </button>
+                    </div>
+                </div>
+
                 <div class="data-table-container">
                     <table class="table js-data-table" id="fleetTransactionTable"
                         data-url="{{ route('fleet-transactions.data') }}" data-order='[[3,"desc"]]'
@@ -125,3 +213,162 @@
         </x-modal>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (function() {
+            var BASE_URL = '{{ route('fleet-transactions.data') }}';
+            var FILTER_FIELDS = [{
+                    id: 'filterTransactionFleet',
+                    param: 'fleet_name'
+                },
+                {
+                    id: 'filterTransactionCustomer',
+                    param: 'customer_name'
+                },
+                {
+                    id: 'filterTransactionDateStart',
+                    param: 'transaction_date_start'
+                },
+                {
+                    id: 'filterTransactionDateEnd',
+                    param: 'transaction_date_end'
+                },
+                {
+                    id: 'filterTransactionStatus',
+                    param: 'efficiency_status'
+                },
+                {
+                    id: 'filterOdometerMin',
+                    param: 'odometer_min'
+                },
+                {
+                    id: 'filterOdometerMax',
+                    param: 'odometer_max'
+                },
+                {
+                    id: 'filterUsageMin',
+                    param: 'usage_min'
+                },
+                {
+                    id: 'filterUsageMax',
+                    param: 'usage_max'
+                },
+                {
+                    id: 'filterCostMin',
+                    param: 'cost_min'
+                },
+                {
+                    id: 'filterCostMax',
+                    param: 'cost_max'
+                },
+                {
+                    id: 'filterRefuelMin',
+                    param: 'refuel_min'
+                },
+                {
+                    id: 'filterRefuelMax',
+                    param: 'refuel_max'
+                },
+                {
+                    id: 'filterKmPerLMin',
+                    param: 'km_per_l_min'
+                },
+                {
+                    id: 'filterKmPerLMax',
+                    param: 'km_per_l_max'
+                },
+                {
+                    id: 'filterLPerKmMin',
+                    param: 'l_per_km_min'
+                },
+                {
+                    id: 'filterLPerKmMax',
+                    param: 'l_per_km_max'
+                }
+            ];
+
+            function buildUrl() {
+                var params = new URLSearchParams();
+
+                FILTER_FIELDS.forEach(function(field) {
+                    var el = document.getElementById(field.id);
+
+                    if (!el) {
+                        return;
+                    }
+
+                    var value = (el.value || '').trim();
+
+                    if (value !== '') {
+                        params.set(field.param, value);
+                    }
+                });
+
+                var qs = params.toString();
+                return qs ? (BASE_URL + '?' + qs) : BASE_URL;
+            }
+
+            function syncFilterState() {
+                var hasActiveFilter = false;
+
+                FILTER_FIELDS.forEach(function(field) {
+                    var el = document.getElementById(field.id);
+
+                    if (!el) {
+                        return;
+                    }
+
+                    var active = (el.value || '').trim() !== '';
+                    hasActiveFilter = hasActiveFilter || active;
+                    el.classList.toggle('transaction-filter-control--active', active);
+                });
+
+                var resetBtn = document.getElementById('resetFleetTransactionFilter');
+                resetBtn.style.display = hasActiveFilter ? '' : 'none';
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                var tableEl = document.getElementById('fleetTransactionTable');
+
+                if (!tableEl) {
+                    return;
+                }
+
+                tableEl.addEventListener('datatable:ready', function(e) {
+                    var dt = e.detail;
+                    var applyBtn = document.getElementById('applyFleetTransactionFilter');
+                    var resetBtn = document.getElementById('resetFleetTransactionFilter');
+                    var filterBar = document.getElementById('fleetTransactionFilterBar');
+
+                    function applyFilter() {
+                        syncFilterState();
+                        dt.ajax.url(buildUrl()).load();
+                    }
+
+                    applyBtn.addEventListener('click', applyFilter);
+
+                    resetBtn.addEventListener('click', function() {
+                        FILTER_FIELDS.forEach(function(field) {
+                            var el = document.getElementById(field.id);
+                            if (el) {
+                                el.value = '';
+                            }
+                        });
+
+                        applyFilter();
+                    });
+
+                    filterBar.addEventListener('keydown', function(event) {
+                        if (event.key === 'Enter') {
+                            event.preventDefault();
+                            applyFilter();
+                        }
+                    });
+
+                    syncFilterState();
+                });
+            });
+        })();
+    </script>
+@endpush

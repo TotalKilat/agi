@@ -192,7 +192,81 @@ Urutan kolom standar:
 
 ULID dan primary key internal tidak ditampilkan.
 
-## 6. Action Tabel
+## 6. Filter DataTable
+
+Filter pada halaman index CRUD ditempatkan di dalam card yang sama dengan tabel,
+di antara `.card-header` dan `.data-table-container`.
+
+Gunakan class global berikut, bukan class domain seperti `.fleet-filter-bar`,
+`.invoice-filter-select`, atau `.customer-filter-reset`:
+
+```blade
+<div class="table-filter-bar">
+  <div class="table-filter-group">
+    <label class="table-filter-label" for="filterStatus">Status</label>
+    <select id="filterStatus" class="table-filter-control">
+      <option value="">Semua</option>
+      <option value="active">Aktif</option>
+      <option value="inactive">Tidak Aktif</option>
+    </select>
+  </div>
+
+  <button type="button" class="table-filter-reset" id="resetFilter" hidden>
+    Reset
+  </button>
+</div>
+```
+
+Aturan layout:
+
+- desktop memakai grid 4 kolom: `repeat(4, minmax(170px, 1fr))`;
+- tablet memakai grid 2 kolom;
+- mobile memakai grid 1 kolom;
+- reset button memakai `grid-column: 1 / -1` dan `justify-self: start`;
+- semua filter dalam satu bar harus memakai lebar konsisten;
+- jangan membuat satu filter melebar sendiri ketika filter lain turun baris.
+
+Aturan field filter:
+
+- filter select/input memakai class `.table-filter-control`;
+- label memakai `.table-filter-label`;
+- wrapper tiap field memakai `.table-filter-group`;
+- state aktif memakai `.table-filter-control--active`;
+- opsi kosong selalu tersedia dan berlabel `Semua`;
+- filter relasi memakai primary key internal sebagai `value`, tetapi nama relasi
+  yang tampil ke user sebagai label;
+- input date/range harus tetap dalam grid yang sama, bukan card terpisah.
+
+Aturan behavior:
+
+- filter sederhana dikirim ke endpoint DataTables sebagai query string;
+- nama parameter mengikuti nama kolom filter, misalnya `customer_id`,
+  `fleet_type_id`, `location_id`, atau `status`;
+- controller menerapkan filter sebelum `DataTables::eloquent(...)`;
+- tombol reset mengosongkan semua filter dan me-reload DataTable;
+- reset button hanya tampil ketika minimal satu filter aktif;
+- hindari script khusus modul jika behavior filter bisa dinyatakan lewat
+  `data-*` dan runtime global.
+
+Contoh backend:
+
+```php
+$status = request()->input('status');
+if ($status !== null && $status !== '') {
+    $query->where('records.status', $status);
+}
+
+$customerId = request()->input('customer_id');
+if ($customerId !== null && $customerId !== '') {
+    $query->where('records.customer_id', $customerId);
+}
+```
+
+Jika halaman memiliki behavior unik sementara belum masuk runtime global, script
+khusus boleh dibuat kecil dan terbatas, tetapi class CSS filter tetap memakai
+nama global di atas.
+
+## 7. Action Tabel
 
 Partial action tidak boleh menyalin SVG dan markup tombol. Gunakan komponen:
 
@@ -219,7 +293,7 @@ Tidak boleh menggunakan:
 - `confirm()` browser;
 - class domain seperti `.js-delete-customer`.
 
-## 7. Status Tabel
+## 8. Status Tabel
 
 Status boolean menggunakan:
 
@@ -237,7 +311,7 @@ Label dapat diubah tanpa membuat component baru:
 />
 ```
 
-## 8. Backend DataTables
+## 9. Backend DataTables
 
 Listing CRUD menggunakan Yajra server-side.
 
@@ -272,7 +346,7 @@ Aturan:
 - kolom relation harus eager-loaded;
 - endpoint `data` didefinisikan sebelum resource route.
 
-## 9. Form Create dan Edit
+## 10. Form Create dan Edit
 
 Form utama selalu:
 
@@ -301,7 +375,7 @@ Create/edit bertanggung jawab atas wrapper dan action:
 </div>
 ```
 
-## 10. Field Form
+## 11. Field Form
 
 Setiap field wajib memiliki:
 
@@ -339,7 +413,7 @@ Gunakan:
 Jangan membuat CSS baru hanya untuk mengubah lebar sebuah field. Gunakan layout
 grid atau utility global yang sudah tersedia.
 
-## 11. Boolean Field
+## 12. Boolean Field
 
 Boolean wajib mengirim `0` saat unchecked:
 
@@ -356,7 +430,7 @@ Boolean wajib mengirim `0` saat unchecked:
 
 Gunakan pola `.check-control`. Jangan membuat toggle baru per modul.
 
-## 12. Select2
+## 13. Select2
 
 Select yang membutuhkan pencarian memakai:
 
@@ -380,7 +454,7 @@ Aturan:
 - tidak perlu CSS Select2 per modul;
 - state error ditangani global oleh `components.css`.
 
-## 13. SweetAlert dan Feedback
+## 14. SweetAlert dan Feedback
 
 Halaman CRUD memakai SweetAlert untuk:
 
@@ -414,7 +488,7 @@ Delete endpoint harus mengembalikan JSON jika request mengharapkan JSON:
 Jangan membuat konfigurasi warna SweetAlert per modul. Tema berada di `crud.js`
 dan `components.css`.
 
-## 14. CSS Reusable
+## 15. CSS Reusable
 
 Nama class harus berdasarkan fungsi:
 
@@ -448,7 +522,7 @@ Sebelum menambah CSS:
 4. perluas class global bila behavior sama;
 5. buat class khusus hanya jika visualnya unik.
 
-## 15. JavaScript Reusable
+## 16. JavaScript Reusable
 
 `crud.js` membaca konfigurasi dari DOM. Modul baru tidak mengubah file ini jika
 hanya memiliki:
@@ -469,7 +543,7 @@ Jika ada behavior unik:
 - muat file setelah `crud.js`;
 - dokumentasikan alasan behavior tidak dapat digeneralisasi.
 
-## 16. Vite
+## 17. Vite
 
 Entry shared terdaftar satu kali:
 
@@ -491,7 +565,7 @@ Halaman CRUD tidak memanggil `@vite()` sendiri. Cukup tambahkan:
 
 Layout adalah satu-satunya tempat yang memuat entry `crud.js`.
 
-## 17. Inline Style dan Script
+## 18. Inline Style dan Script
 
 Fitur baru tidak boleh menggunakan:
 
@@ -506,7 +580,7 @@ Gunakan class, component, named route, dan ES module.
 Kode lama yang masih inline dirapikan saat area tersebut disentuh, tanpa
 melakukan refactor massal yang tidak terkait.
 
-## 18. Checklist Modul Baru
+## 19. Checklist Modul Baru
 
 Frontend modul CRUD baru hanya memerlukan:
 
@@ -533,7 +607,7 @@ Checklist implementasi:
 9. ULID tidak tampil dan tidak ada di JSON;
 10. desktop, mobile, dan console sudah diperiksa.
 
-## 19. Modal dan Form Async
+## 20. Modal dan Form Async
 
 ### Modal Reusable
 
@@ -675,7 +749,7 @@ navigasi. Ikon berasal dari `<x-menu-icon>` dan harus menggambarkan fungsi menu.
 Struktur parent-child hanya digunakan bila memang ada kebutuhan expand/collapse
 untuk workflow bertingkat.
 
-## 20. Quality Gate
+## 21. Quality Gate
 
 Jalankan:
 

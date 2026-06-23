@@ -93,6 +93,22 @@ class MenuManagementTest extends TestCase
         ]);
         $this->assertDatabaseHas('menus', [
             'parent_id' => null,
+            'name' => 'Fleet Types',
+            'section' => 'Fleet',
+            'icon' => 'truck',
+            'route_name' => 'fleet-types.index',
+            'active_pattern' => 'fleet-types.*',
+        ]);
+        $this->assertDatabaseHas('menus', [
+            'parent_id' => null,
+            'name' => 'Locations',
+            'section' => 'Fleet',
+            'icon' => 'link',
+            'route_name' => 'locations.index',
+            'active_pattern' => 'locations.*',
+        ]);
+        $this->assertDatabaseHas('menus', [
+            'parent_id' => null,
             'name' => 'Summary Report',
             'section' => 'Fleet',
             'icon' => 'analytics',
@@ -133,7 +149,7 @@ class MenuManagementTest extends TestCase
             'section' => 'Fleet',
             'route_name' => null,
         ]);
-        $this->assertDatabaseCount('menus', 5);
+        $this->assertDatabaseCount('menus', 7);
     }
 
     public function test_menu_can_be_created_with_a_ulid(): void

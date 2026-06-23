@@ -23,6 +23,8 @@ class StoreFleetRequest extends FormRequest
         $hasFuelSensor = $this->boolean('has_fuel_sensor');
 
         $this->merge([
+            'fleet_type_id' => $this->filled('fleet_type_id') ? $this->input('fleet_type_id') : null,
+            'location_id' => $this->filled('location_id') ? $this->input('location_id') : null,
             'has_fuel_sensor' => $hasFuelSensor,
             'fuel_sensor_installed_at' => $hasFuelSensor
                 ? $this->input('fuel_sensor_installed_at')
@@ -41,6 +43,8 @@ class StoreFleetRequest extends FormRequest
     {
         return [
             'customer_id' => ['required', 'string', Rule::exists('customers', 'id')],
+            'fleet_type_id' => ['nullable', 'string', Rule::exists('fleet_type', 'id')],
+            'location_id' => ['nullable', 'string', Rule::exists('locations', 'id')],
             'vehicle_name' => ['required', 'string', 'max:200'],
             'device_name' => [
                 'required',

@@ -47,6 +47,40 @@ class FleetMenuSeeder extends Seeder
                 ]);
             }
 
+            Menu::query()->updateOrCreate(
+                [
+                    'route_name' => 'fleet-types.index',
+                ],
+                [
+                    'parent_id' => null,
+                    'name' => 'Fleet Types',
+                    'section' => 'Fleet',
+                    'icon' => 'truck',
+                    'url' => null,
+                    'active_pattern' => 'fleet-types.*',
+                    'target' => '_self',
+                    'sort_order' => 5,
+                    'is_active' => true,
+                ],
+            );
+
+            Menu::query()->updateOrCreate(
+                [
+                    'route_name' => 'locations.index',
+                ],
+                [
+                    'parent_id' => null,
+                    'name' => 'Locations',
+                    'section' => 'Fleet',
+                    'icon' => 'link',
+                    'url' => null,
+                    'active_pattern' => 'locations.*',
+                    'target' => '_self',
+                    'sort_order' => 7,
+                    'is_active' => true,
+                ],
+            );
+
             Menu::query()
                 ->where('name', 'Non Active Fleet')
                 ->where('section', 'Fleet')

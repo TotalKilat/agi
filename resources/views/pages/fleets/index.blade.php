@@ -43,6 +43,39 @@
                 </div>
                 <div class="fleet-filter-bar">
                     <div class="fleet-filter-group">
+                        <label class="fleet-filter-label" for="filterFleetType">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 6h18" />
+                                <path d="M7 12h10" />
+                                <path d="M10 18h4" />
+                            </svg>
+                            Fleet Type
+                        </label>
+                        <select id="filterFleetType" class="fleet-filter-select">
+                            <option value="">Semua</option>
+                            @foreach ($fleetTypes as $fleetType)
+                                <option value="{{ $fleetType->id }}">{{ $fleetType->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="fleet-filter-group">
+                        <label class="fleet-filter-label" for="filterLocation">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 10c0 7-9 12-9 12S3 17 3 10a9 9 0 1 1 18 0Z" />
+                                <circle cx="12" cy="10" r="3" />
+                            </svg>
+                            Location
+                        </label>
+                        <select id="filterLocation" class="fleet-filter-select">
+                            <option value="">Semua</option>
+                            @foreach ($locations as $location)
+                                <option value="{{ $location->id }}">{{ $location->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="fleet-filter-group">
                         <label class="fleet-filter-label" for="filterHasFuelSensor">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -97,6 +130,8 @@
                                 <th data-column="vehicle_name">Vehicle Name</th>
                                 <th data-column="device_name">Device Name</th>
                                 <th data-column="customer_name" data-orderable="false">Customer</th>
+                                <th data-column="fleet_type_name" data-orderable="false">Fleet Type</th>
+                                <th data-column="location_name" data-orderable="false">Location</th>
                                 <th data-column="fuel_sensor" data-name="has_fuel_sensor" data-align="center">Fuel Sensor
                                 </th>
                                 <th data-column="fuel_sensor_installed_at">Installed Date</th>
@@ -209,8 +244,12 @@
         (function() {
             function buildUrl(base) {
                 var params = new URLSearchParams();
+                var fleetType = document.getElementById('filterFleetType').value;
+                var location = document.getElementById('filterLocation').value;
                 var sensor = document.getElementById('filterHasFuelSensor').value;
                 var status = document.getElementById('filterFuelSensorStatus').value;
+                if (fleetType !== '') params.set('fleet_type_id', fleetType);
+                if (location !== '') params.set('location_id', location);
                 if (sensor !== '') params.set('has_fuel_sensor', sensor);
                 if (status !== '') params.set('fuel_sensor_status', status);
                 var qs = params.toString();
@@ -218,11 +257,17 @@
             }
 
             function syncResetBtn() {
+                var fleetType = document.getElementById('filterFleetType').value;
+                var location = document.getElementById('filterLocation').value;
                 var sensor = document.getElementById('filterHasFuelSensor').value;
                 var status = document.getElementById('filterFuelSensorStatus').value;
                 var resetBtn = document.getElementById('resetFleetFilter');
-                resetBtn.style.display = (sensor !== '' || status !== '') ? '' : 'none';
+                resetBtn.style.display = (fleetType !== '' || location !== '' || sensor !== '' || status !== '') ? '' : 'none';
 
+                document.getElementById('filterFleetType').classList.toggle('fleet-filter-select--active',
+                    fleetType !== '');
+                document.getElementById('filterLocation').classList.toggle('fleet-filter-select--active',
+                    location !== '');
                 document.getElementById('filterHasFuelSensor').classList.toggle('fleet-filter-select--active',
                     sensor !== '');
                 document.getElementById('filterFuelSensorStatus').classList.toggle('fleet-filter-select--active',
@@ -243,12 +288,18 @@
                         dt.ajax.url(buildUrl(BASE_URL)).load();
                     }
 
+                    document.getElementById('filterFleetType').addEventListener('change',
+                        applyFilter);
+                    document.getElementById('filterLocation').addEventListener('change',
+                        applyFilter);
                     document.getElementById('filterHasFuelSensor').addEventListener('change',
                         applyFilter);
                     document.getElementById('filterFuelSensorStatus').addEventListener('change',
                         applyFilter);
 
                     document.getElementById('resetFleetFilter').addEventListener('click', function() {
+                        document.getElementById('filterFleetType').value = '';
+                        document.getElementById('filterLocation').value = '';
                         document.getElementById('filterHasFuelSensor').value = '';
                         document.getElementById('filterFuelSensorStatus').value = '';
                         applyFilter();

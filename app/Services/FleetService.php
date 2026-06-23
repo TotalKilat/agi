@@ -9,7 +9,9 @@ use Carbon\CarbonImmutable;
 use Carbon\Exceptions\InvalidFormatException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class FleetService
@@ -24,11 +26,13 @@ class FleetService
     public function getDataTableQuery(?string $customerId = null): Builder
     {
         return Fleet::query()
-            ->with('customer')
+            ->with(['customer', 'fleetType', 'location'])
             ->when($customerId !== null, fn(Builder $query) => $query->where('fleets.customer_id', $customerId))
             ->select([
                 'id',
                 'customer_id',
+                'fleet_type_id',
+                'location_id',
                 'vehicle_name',
                 'device_name',
                 'has_fuel_sensor',
@@ -276,6 +280,10 @@ class FleetService
         $longitude = $position['longitude'];
         $address = trim((string) ($position['location'] ?? ''));
 
+        if ($address === '' || str($address)->lower()->toString() === 'unavailable') {
+            $address = $this->resolveAddress($latitude, $longitude) ?? '';
+        }
+
         return [
             'mileage' => [
                 'text' => $this->formatMileage($position['mileage']),
@@ -320,6 +328,53 @@ class FleetService
         } catch (InvalidFormatException) {
             return '—';
         }
+    }
+
+    private function resolveAddress(float $latitude, float $longitude): ?string
+    {
+        $cacheKey = sprintf('nominatim:address:%.5f:%.5f', $latitude, $longitude);
+        $cachedAddress = Cache::get($cacheKey);
+
+        if (is_string($cachedAddress) && trim($cachedAddress) !== '') {
+            return trim($cachedAddress);
+        }
+
+        try {
+            $response = Http::timeout(5)
+                ->acceptJson()
+                ->withHeaders([
+                    'User-Agent' => config('app.name', 'AGI Laravel'),
+                ])
+                ->get('https://nominatim.openstreetmap.org/reverse', [
+                    'format' => 'jsonv2',
+                    'lat' => $latitude,
+                    'lon' => $longitude,
+                    'zoom' => 18,
+                    'addressdetails' => 0,
+                ]);
+        } catch (\Throwable $exception) {
+            Log::warning('Reverse geocoding failed for latest fleet position.', [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'reason' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
+
+        if (! $response->successful()) {
+            return null;
+        }
+
+        $address = trim((string) $response->json('display_name', ''));
+
+        if ($address === '') {
+            return null;
+        }
+
+        Cache::put($cacheKey, $address, now()->addDays(30));
+
+        return $address;
     }
 
     /**

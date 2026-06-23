@@ -17,6 +17,8 @@ class Fleet extends Model
 
     protected $fillable = [
         'customer_id',
+        'fleet_type_id',
+        'location_id',
         'vehicle_name',
         'device_name',
         'has_fuel_sensor',
@@ -39,6 +41,16 @@ class Fleet extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function fleetType(): BelongsTo
+    {
+        return $this->belongsTo(FleetType::class);
+    }
+
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
     }
 
     public function transactions(): HasMany
