@@ -184,10 +184,12 @@ class FleetTransactionController extends Controller
         }
 
         $message = sprintf(
-            'Transaction import completed: %d created, %d updated, and %d unchanged.',
+            'Transaction import completed: %d processed (%d created, %d updated, and %d unchanged), %d skipped.',
+            $summary['processed'],
             $summary['created'],
             $summary['updated'],
             $summary['unchanged'],
+            $summary['skipped'],
         );
 
         if ($request->expectsJson()) {

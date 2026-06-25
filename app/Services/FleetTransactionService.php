@@ -154,7 +154,7 @@ class FleetTransactionService
     /**
      * Import a Total Kilat GPS daily performance HTML/XLS export.
      *
-     * @return array{created: int, updated: int, unchanged: int, skipped: int}
+     * @return array{created: int, updated: int, unchanged: int, skipped: int, processed: int}
      */
     public function import(UploadedFile $file): array
     {
@@ -166,18 +166,20 @@ class FleetTransactionService
             ]);
         }
 
-        $matchedRows = $this->matchRowsToFleets($rows);
+        $matchResult = $this->matchRowsToFleets($rows);
+        $importRows = $this->skipDuplicateImportRows($matchResult['rows']);
         $now = now();
 
-        return DB::transaction(function () use ($matchedRows, $file, $now): array {
+        return DB::transaction(function () use ($importRows, $matchResult, $file, $now): array {
             $summary = [
                 'created' => 0,
                 'updated' => 0,
                 'unchanged' => 0,
-                'skipped' => 0,
+                'skipped' => $matchResult['skipped'] + $importRows['skipped'],
+                'processed' => 0,
             ];
 
-            foreach ($matchedRows as $row) {
+            foreach ($importRows['rows'] as $row) {
                 $transaction = FleetTransaction::query()
                     ->withTrashed()
                     ->where('fleet_id', $row['fleet_id'])
@@ -218,6 +220,8 @@ class FleetTransactionService
                 $transaction->save();
                 $summary['updated']++;
             }
+
+            $summary['processed'] = $summary['created'] + $summary['updated'] + $summary['unchanged'];
 
             return $summary;
         });
@@ -305,7 +309,7 @@ class FleetTransactionService
 
     /**
      * @param  list<array<string, mixed>>  $rows
-     * @return list<array<string, mixed>>
+     * @return array{rows: list<array<string, mixed>>, skipped: int}
      */
     private function matchRowsToFleets(array $rows): array
     {
@@ -314,9 +318,8 @@ class FleetTransactionService
             ->get(['id', 'vehicle_name'])
             ->groupBy(fn(Fleet $fleet): string => $this->normalizeVehicleName($fleet->vehicle_name));
 
-        $unmatched = [];
-        $ambiguous = [];
         $matched = [];
+        $skipped = 0;
 
         foreach ($rows as $row) {
             $key = $this->normalizeVehicleName($row['vehicle_name_snapshot']);
@@ -324,13 +327,13 @@ class FleetTransactionService
             $fleets = $fleetGroups->get($key);
 
             if (! $fleets || $fleets->isEmpty()) {
-                $unmatched[] = $row['vehicle_name_snapshot'];
+                $skipped++;
 
                 continue;
             }
 
             if ($fleets->count() > 1) {
-                $ambiguous[] = $row['vehicle_name_snapshot'];
+                $skipped++;
 
                 continue;
             }
@@ -341,23 +344,39 @@ class FleetTransactionService
             ];
         }
 
-        if ($unmatched !== [] || $ambiguous !== []) {
-            $messages = [];
+        return [
+            'rows' => $matched,
+            'skipped' => $skipped,
+        ];
+    }
 
-            if ($unmatched !== []) {
-                $messages[] = 'Vehicle not found in fleet master: ' . implode(', ', array_values(array_unique($unmatched))) . '.';
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     * @return array{rows: list<array<string, mixed>>, skipped: int}
+     */
+    private function skipDuplicateImportRows(array $rows): array
+    {
+        $seen = [];
+        $uniqueRows = [];
+        $skipped = 0;
+
+        foreach ($rows as $row) {
+            $key = $row['fleet_id'] . '|' . $row['transaction_date'];
+
+            if (isset($seen[$key])) {
+                $skipped++;
+
+                continue;
             }
 
-            if ($ambiguous !== []) {
-                $messages[] = 'Vehicle name is duplicated in fleet master: ' . implode(', ', array_values(array_unique($ambiguous))) . '.';
-            }
-
-            throw ValidationException::withMessages([
-                'file' => implode(' ', $messages),
-            ]);
+            $seen[$key] = true;
+            $uniqueRows[] = $row;
         }
 
-        return $matched;
+        return [
+            'rows' => $uniqueRows,
+            'skipped' => $skipped,
+        ];
     }
 
     /**

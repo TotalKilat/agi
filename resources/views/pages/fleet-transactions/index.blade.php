@@ -176,7 +176,7 @@
                             accept=".xls,.html,.htm" required>
                         <div class="form-hint">
                             Upload the Daily Performance Analysis Report export. Vehicle names in the file must already
-                            exist in Fleet.
+                            exist in Fleet. Maximum file size is 100 MB.
                         </div>
                     </div>
                 </div>

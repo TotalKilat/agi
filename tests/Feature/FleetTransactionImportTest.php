@@ -40,7 +40,9 @@ class FleetTransactionImportTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.created', 2)
             ->assertJsonPath('data.updated', 0)
-            ->assertJsonPath('data.unchanged', 0);
+            ->assertJsonPath('data.unchanged', 0)
+            ->assertJsonPath('data.processed', 2)
+            ->assertJsonPath('data.skipped', 0);
 
         $this->assertDatabaseHas('fleet_transactions', [
             'fleet_id' => $fleetA->id,
@@ -69,26 +71,58 @@ class FleetTransactionImportTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.created', 0)
             ->assertJsonPath('data.updated', 0)
-            ->assertJsonPath('data.unchanged', 2);
+            ->assertJsonPath('data.unchanged', 2)
+            ->assertJsonPath('data.processed', 2)
+            ->assertJsonPath('data.skipped', 0);
     }
 
-    public function test_import_rejects_unknown_vehicle_name(): void
+    public function test_import_skips_unknown_vehicle_name_and_processes_valid_rows(): void
     {
-        $this->createFleet('B 9882 SDD');
+        $fleet = $this->createFleet('B 9882 SDD');
 
-        $response = $this
-            ->withHeaders([
-                'Accept' => 'application/json',
-                'X-Requested-With' => 'XMLHttpRequest',
-            ])
+        $this
             ->post(route('fleet-transactions.import'), [
                 'file' => $this->sampleUpload(),
-            ]);
+            ], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('data.created', 1)
+            ->assertJsonPath('data.processed', 1)
+            ->assertJsonPath('data.skipped', 1);
 
-        $this->assertSame(422, $response->getStatusCode());
-        $this->assertStringContainsString('B 9037 SDE', $response->getContent());
+        $this->assertDatabaseHas('fleet_transactions', [
+            'fleet_id' => $fleet->id,
+            'transaction_date' => '2026-06-10 00:00:00',
+            'vehicle_name_snapshot' => 'B 9882 SDD',
+        ]);
+        $this->assertDatabaseCount('fleet_transactions', 1);
+    }
 
-        $this->assertDatabaseCount('fleet_transactions', 0);
+    public function test_import_skips_ambiguous_master_names_and_duplicate_vehicle_date_rows(): void
+    {
+        $this->createFleet('B 9882 SDD', 'B9882A');
+        $this->createFleet('B 9882 SDD', 'B9882B');
+        $fleet = $this->createFleet('B 9037 SDE');
+
+        $this
+            ->post(route('fleet-transactions.import'), [
+                'file' => $this->sampleUpload($this->duplicateRowsSampleHtml()),
+            ], ['Accept' => 'application/json'])
+            ->assertOk()
+            ->assertJsonPath('data.created', 2)
+            ->assertJsonPath('data.processed', 2)
+            ->assertJsonPath('data.skipped', 2);
+
+        $this->assertDatabaseHas('fleet_transactions', [
+            'fleet_id' => $fleet->id,
+            'transaction_date' => '2026-06-10 00:00:00',
+            'vehicle_name_snapshot' => 'B 9037 SDE',
+        ]);
+        $this->assertDatabaseHas('fleet_transactions', [
+            'fleet_id' => $fleet->id,
+            'transaction_date' => '2026-06-11 00:00:00',
+            'vehicle_name_snapshot' => 'B 9037 SDE',
+        ]);
+        $this->assertDatabaseCount('fleet_transactions', 2);
     }
 
     public function test_transaction_can_be_created_updated_deleted_and_listed(): void
@@ -157,7 +191,7 @@ class FleetTransactionImportTest extends TestCase
         $this->assertSoftDeleted('fleet_transactions', ['id' => $transaction->id]);
     }
 
-    private function createFleet(string $vehicleName): Fleet
+    private function createFleet(string $vehicleName, ?string $deviceName = null): Fleet
     {
         $customer = Customer::query()->first() ?: Customer::query()->create([
             'name' => 'AGI Customer',
@@ -170,15 +204,15 @@ class FleetTransactionImportTest extends TestCase
         return Fleet::query()->create([
             'customer_id' => $customer->id,
             'vehicle_name' => $vehicleName,
-            'device_name' => str_replace(' ', '', $vehicleName),
+            'device_name' => $deviceName ?? str_replace(' ', '', $vehicleName),
             'is_active' => true,
         ]);
     }
 
-    private function sampleUpload(): UploadedFile
+    private function sampleUpload(?string $html = null): UploadedFile
     {
         $path = tempnam(sys_get_temp_dir(), 'fleet-transactions-');
-        file_put_contents($path, $this->sampleHtml());
+        file_put_contents($path, $html ?? $this->sampleHtml());
 
         return new UploadedFile($path, 'Daily Performance Analysis Report PER GRUP.xls', 'application/vnd.ms-excel', null, true);
     }
@@ -195,6 +229,24 @@ class FleetTransactionImportTest extends TestCase
 <tr><td>B 9882 SDD</td><td>2026-06-10 00:00:00</td><td>0.00</td><td>70.37</td><td>70.58</td><td>0.00</td><td>0.00</td><td>0.0</td><td>0.0</td><td>0.0</td><td>0.00</td><td></td><td></td><td></td><td></td><td>24:00:00</td></tr>
 <tr><td>B 9037 SDE</td><td>2026-06-10 00:00:00</td><td>16.00</td><td>95.34</td><td>94.83</td><td>12.79</td><td>39649.00</td><td>0.0</td><td>0.8</td><td>1.2</td><td>2485.34</td><td></td><td></td><td>01:28:19</td><td></td><td>22:31:41</td></tr>
 <tr><td></td><td></td><td>16.00</td><td></td><td></td><td>12.79</td><td>39649.00</td><td></td><td></td><td></td><td></td><td></td><td></td><td>01:28:19</td><td></td><td>46:31:41</td></tr>
+</table>
+</body></html>
+HTML;
+    }
+
+    private function duplicateRowsSampleHtml(): string
+    {
+        return <<<'HTML'
+<html><body>
+<table><tr><td>[2026-06-10 00:00:00-2026-06-11 23:59:59]</td></tr></table>
+<table>
+<tr>
+<th>Device Name</th><th>Date & Time</th><th>Odometer(Km)</th><th>Initial Volume(L)</th><th>Final Volume(L)</th><th>Usage (L)</th><th>Cost (Rp)</th><th>Idle Usage (L)</th><th>1 Km /L</th><th>1 L /Km</th><th>1 Km /Cost</th><th>Refuel (L)</th><th>Refuel (Times)</th><th>Running (HH:mm:ss)</th><th>Idle (HH:mm:ss)</th><th>Stop (HH:mm:ss)</th>
+</tr>
+<tr><td>B 9882 SDD</td><td>2026-06-10 00:00:00</td><td>10.00</td><td></td><td></td><td>5.00</td><td>10000.00</td><td></td><td></td><td></td><td></td><td></td><td></td><td>01:00:00</td><td></td><td>23:00:00</td></tr>
+<tr><td>B 9037 SDE</td><td>2026-06-10 00:00:00</td><td>16.00</td><td></td><td></td><td>12.79</td><td>39649.00</td><td></td><td></td><td></td><td></td><td></td><td></td><td>01:28:19</td><td></td><td>22:31:41</td></tr>
+<tr><td>B 9037 SDE</td><td>2026-06-10 12:00:00</td><td>20.00</td><td></td><td></td><td>14.00</td><td>42000.00</td><td></td><td></td><td></td><td></td><td></td><td></td><td>02:00:00</td><td></td><td>22:00:00</td></tr>
+<tr><td>B 9037 SDE</td><td>2026-06-11 00:00:00</td><td>18.00</td><td></td><td></td><td>13.00</td><td>41000.00</td><td></td><td></td><td></td><td></td><td></td><td></td><td>01:40:00</td><td></td><td>22:20:00</td></tr>
 </table>
 </body></html>
 HTML;
