@@ -59,6 +59,26 @@
                             placeholder="Nama customer">
                     </div>
                     <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterTransactionFleetType">Fleet Type</label>
+                        <select id="filterTransactionFleetType"
+                            class="transaction-filter-select js-select2 js-filter-multi-select" multiple
+                            data-placeholder="Semua" data-allow-clear="true">
+                            @foreach ($fleetTypes as $fleetType)
+                                <option value="{{ $fleetType->id }}">{{ $fleetType->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="transaction-filter-group">
+                        <label class="transaction-filter-label" for="filterTransactionLocation">Location</label>
+                        <select id="filterTransactionLocation"
+                            class="transaction-filter-select js-select2 js-filter-multi-select" multiple
+                            data-placeholder="Semua" data-allow-clear="true">
+                            @foreach ($locations as $location)
+                                <option value="{{ $location->id }}">{{ $location->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="transaction-filter-group">
                         <label class="transaction-filter-label" for="filterTransactionDateStart">Date From</label>
                         <input type="date" id="filterTransactionDateStart" class="transaction-filter-input">
                     </div>
@@ -75,54 +95,6 @@
                             <option value="no_sensor">Fuel Sensor Belum Terpasang</option>
                             <option value="no_data">KM/L Belum Ada</option>
                         </select>
-                    </div>
-                    <div class="transaction-filter-group">
-                        <label class="transaction-filter-label" for="filterOdometerMin">Odometer Min</label>
-                        <input type="text" id="filterOdometerMin" class="transaction-filter-input" placeholder="0">
-                    </div>
-                    <div class="transaction-filter-group">
-                        <label class="transaction-filter-label" for="filterOdometerMax">Odometer Max</label>
-                        <input type="text" id="filterOdometerMax" class="transaction-filter-input" placeholder="1000">
-                    </div>
-                    <div class="transaction-filter-group">
-                        <label class="transaction-filter-label" for="filterUsageMin">Usage Min (L)</label>
-                        <input type="text" id="filterUsageMin" class="transaction-filter-input" placeholder="0">
-                    </div>
-                    <div class="transaction-filter-group">
-                        <label class="transaction-filter-label" for="filterUsageMax">Usage Max (L)</label>
-                        <input type="text" id="filterUsageMax" class="transaction-filter-input" placeholder="100">
-                    </div>
-                    <div class="transaction-filter-group">
-                        <label class="transaction-filter-label" for="filterCostMin">Cost Min (Rp)</label>
-                        <input type="text" id="filterCostMin" class="transaction-filter-input" placeholder="0">
-                    </div>
-                    <div class="transaction-filter-group">
-                        <label class="transaction-filter-label" for="filterCostMax">Cost Max (Rp)</label>
-                        <input type="text" id="filterCostMax" class="transaction-filter-input" placeholder="1000000">
-                    </div>
-                    <div class="transaction-filter-group">
-                        <label class="transaction-filter-label" for="filterRefuelMin">Refuel Min (L)</label>
-                        <input type="text" id="filterRefuelMin" class="transaction-filter-input" placeholder="0">
-                    </div>
-                    <div class="transaction-filter-group">
-                        <label class="transaction-filter-label" for="filterRefuelMax">Refuel Max (L)</label>
-                        <input type="text" id="filterRefuelMax" class="transaction-filter-input" placeholder="100">
-                    </div>
-                    <div class="transaction-filter-group">
-                        <label class="transaction-filter-label" for="filterKmPerLMin">KM/L Min</label>
-                        <input type="text" id="filterKmPerLMin" class="transaction-filter-input" placeholder="0">
-                    </div>
-                    <div class="transaction-filter-group">
-                        <label class="transaction-filter-label" for="filterKmPerLMax">KM/L Max</label>
-                        <input type="text" id="filterKmPerLMax" class="transaction-filter-input" placeholder="10">
-                    </div>
-                    <div class="transaction-filter-group">
-                        <label class="transaction-filter-label" for="filterLPerKmMin">L/KM Min</label>
-                        <input type="text" id="filterLPerKmMin" class="transaction-filter-input" placeholder="0">
-                    </div>
-                    <div class="transaction-filter-group">
-                        <label class="transaction-filter-label" for="filterLPerKmMax">L/KM Max</label>
-                        <input type="text" id="filterLPerKmMax" class="transaction-filter-input" placeholder="1">
                     </div>
                     <div class="transaction-filter-actions">
                         <button type="button" id="applyFleetTransactionFilter" class="transaction-filter-apply">
@@ -146,6 +118,8 @@
                                 <th data-column="fleet_name" data-name="vehicle_name_snapshot">Fleet</th>
                                 <th data-column="transaction_date">Date</th>
                                 <th data-column="customer_name" data-orderable="false">Customer</th>
+                                <th data-column="fleet_type_name" data-orderable="false">Fleet Type</th>
+                                <th data-column="location_name" data-orderable="false">Location</th>
                                 <th data-column="odometer_km" data-name="odometer_km">Odometer</th>
                                 <th data-column="usage_l" data-name="usage_l">Usage</th>
                                 <th data-column="cost_rp" data-name="cost_rp">Cost</th>
@@ -227,6 +201,16 @@
                     param: 'customer_name'
                 },
                 {
+                    id: 'filterTransactionFleetType',
+                    param: 'fleet_type_ids',
+                    multiple: true
+                },
+                {
+                    id: 'filterTransactionLocation',
+                    param: 'location_ids',
+                    multiple: true
+                },
+                {
                     id: 'filterTransactionDateStart',
                     param: 'transaction_date_start'
                 },
@@ -237,54 +221,6 @@
                 {
                     id: 'filterTransactionStatus',
                     param: 'efficiency_status'
-                },
-                {
-                    id: 'filterOdometerMin',
-                    param: 'odometer_min'
-                },
-                {
-                    id: 'filterOdometerMax',
-                    param: 'odometer_max'
-                },
-                {
-                    id: 'filterUsageMin',
-                    param: 'usage_min'
-                },
-                {
-                    id: 'filterUsageMax',
-                    param: 'usage_max'
-                },
-                {
-                    id: 'filterCostMin',
-                    param: 'cost_min'
-                },
-                {
-                    id: 'filterCostMax',
-                    param: 'cost_max'
-                },
-                {
-                    id: 'filterRefuelMin',
-                    param: 'refuel_min'
-                },
-                {
-                    id: 'filterRefuelMax',
-                    param: 'refuel_max'
-                },
-                {
-                    id: 'filterKmPerLMin',
-                    param: 'km_per_l_min'
-                },
-                {
-                    id: 'filterKmPerLMax',
-                    param: 'km_per_l_max'
-                },
-                {
-                    id: 'filterLPerKmMin',
-                    param: 'l_per_km_min'
-                },
-                {
-                    id: 'filterLPerKmMax',
-                    param: 'l_per_km_max'
                 }
             ];
 
@@ -295,6 +231,16 @@
                     var el = document.getElementById(field.id);
 
                     if (!el) {
+                        return;
+                    }
+
+                    if (field.multiple) {
+                        Array.from(el.selectedOptions || []).forEach(function(option) {
+                            if (option.value !== '') {
+                                params.append(field.param + '[]', option.value);
+                            }
+                        });
+
                         return;
                     }
 
@@ -319,7 +265,11 @@
                         return;
                     }
 
-                    var active = (el.value || '').trim() !== '';
+                    var active = field.multiple
+                        ? Array.from(el.selectedOptions || []).some(function(option) {
+                            return option.value !== '';
+                        })
+                        : (el.value || '').trim() !== '';
                     hasActiveFilter = hasActiveFilter || active;
                     el.classList.toggle('transaction-filter-control--active', active);
                 });
@@ -352,7 +302,17 @@
                         FILTER_FIELDS.forEach(function(field) {
                             var el = document.getElementById(field.id);
                             if (el) {
-                                el.value = '';
+                                if (field.multiple) {
+                                    Array.from(el.options || []).forEach(function(option) {
+                                        option.selected = false;
+                                    });
+
+                                    if (window.jQuery) {
+                                        window.jQuery(el).val(null).trigger('change');
+                                    }
+                                } else {
+                                    el.value = '';
+                                }
                             }
                         });
 

@@ -73,6 +73,10 @@ function initializeSelect2() {
         const select = $(this);
 
         if (select.hasClass('select2-hidden-accessible')) {
+            if (select.hasClass('js-filter-multi-select')) {
+                syncFilterMultiSelect(select);
+            }
+
             return;
         }
 
@@ -81,7 +85,33 @@ function initializeSelect2() {
             placeholder: select.data('placeholder') || null,
             allowClear: select.data('allow-clear') === true || select.data('allow-clear') === 'true',
         });
+
+        if (select.hasClass('js-filter-multi-select')) {
+            select
+                .next('.select2-container')
+                .addClass('select2-container--filter-multi');
+
+            select.on('change select2:clear select2:select select2:unselect', () => {
+                syncFilterMultiSelect(select);
+            });
+
+            syncFilterMultiSelect(select);
+        }
     });
+}
+
+function syncFilterMultiSelect(select) {
+    const selected = select.select2('data').filter((item) => item.id !== '');
+    const placeholder = select.data('placeholder') || 'Semua';
+    const summary = selected.length === 0
+        ? placeholder
+        : (selected.length === 1 ? selected[0].text : `${selected.length} dipilih`);
+    const container = select.next('.select2-container');
+    const selection = container.find('.select2-selection--multiple');
+
+    container.addClass('select2-container--filter-multi');
+    container.toggleClass('select2-filter-multi--has-value', selected.length > 0);
+    selection.attr('data-summary', summary);
 }
 
 function replaceSelectOptions(select, items, placeholder) {

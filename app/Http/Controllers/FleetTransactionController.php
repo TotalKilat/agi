@@ -6,7 +6,9 @@ use App\Http\Requests\FleetTransaction\ImportFleetTransactionRequest;
 use App\Http\Requests\FleetTransaction\StoreFleetTransactionRequest;
 use App\Http\Requests\FleetTransaction\UpdateFleetTransactionRequest;
 use App\Models\Fleet;
+use App\Models\FleetType;
 use App\Models\FleetTransaction;
+use App\Models\Location;
 use App\Services\FleetTransactionService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -24,7 +26,10 @@ class FleetTransactionController extends Controller
 
     public function index(): View
     {
-        return view('pages.fleet-transactions.index');
+        return view('pages.fleet-transactions.index', [
+            'fleetTypes' => FleetType::query()->orderBy('name')->get(['id', 'name']),
+            'locations' => Location::query()->orderBy('name')->get(['id', 'name']),
+        ]);
     }
 
     public function data(): JsonResponse
@@ -40,6 +45,20 @@ class FleetTransactionController extends Controller
         if ($customerName !== '') {
             $query->whereHas('fleet.customer', function (Builder $query) use ($customerName): void {
                 $query->where('name', 'like', "%{$customerName}%");
+            });
+        }
+
+        $fleetTypeIds = $this->arrayFilterInput('fleet_type_ids');
+        if ($fleetTypeIds !== []) {
+            $query->whereHas('fleet', function (Builder $query) use ($fleetTypeIds): void {
+                $query->whereIn('fleet_type_id', $fleetTypeIds);
+            });
+        }
+
+        $locationIds = $this->arrayFilterInput('location_ids');
+        if ($locationIds !== []) {
+            $query->whereHas('fleet', function (Builder $query) use ($locationIds): void {
+                $query->whereIn('location_id', $locationIds);
             });
         }
 
@@ -113,6 +132,12 @@ class FleetTransactionController extends Controller
                         })
                         ->orWhereHas('fleet.customer', function (Builder $query) use ($keyword): void {
                             $query->where('name', 'like', "%{$keyword}%");
+                        })
+                        ->orWhereHas('fleet.fleetType', function (Builder $query) use ($keyword): void {
+                            $query->where('name', 'like', "%{$keyword}%");
+                        })
+                        ->orWhereHas('fleet.location', function (Builder $query) use ($keyword): void {
+                            $query->where('name', 'like', "%{$keyword}%");
                         });
                 });
             })
@@ -121,6 +146,8 @@ class FleetTransactionController extends Controller
                 fn(FleetTransaction $transaction) => view('pages.fleet-transactions.columns.fleet', compact('transaction'))->render(),
             )
             ->addColumn('customer_name', fn(FleetTransaction $transaction) => $transaction->fleet?->customer?->name ?? '—')
+            ->addColumn('fleet_type_name', fn(FleetTransaction $transaction) => $transaction->fleet?->fleetType?->name ?? '—')
+            ->addColumn('location_name', fn(FleetTransaction $transaction) => $transaction->fleet?->location?->name ?? '—')
             ->addColumn('transaction_date', fn(FleetTransaction $transaction) => $transaction->transaction_date?->locale('id')->translatedFormat('d F Y') ?? '—')
             ->addColumn('odometer_km', fn(FleetTransaction $transaction) => $this->formatNumber($transaction->odometer_km, 2) . ' km')
             ->addColumn('usage_l', fn(FleetTransaction $transaction) => $this->formatNumber($transaction->usage_l, 2) . ' L')
@@ -140,6 +167,8 @@ class FleetTransactionController extends Controller
                 'action',
                 'fleet_name',
                 'customer_name',
+                'fleet_type_name',
+                'location_name',
                 'transaction_date',
                 'odometer_km',
                 'usage_l',
@@ -280,6 +309,23 @@ class FleetTransactionController extends Controller
         if ($maxValue !== null) {
             $query->where($column, '<=', $maxValue);
         }
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function arrayFilterInput(string $key): array
+    {
+        $value = request()->input($key, []);
+
+        if (! is_array($value)) {
+            $value = [$value];
+        }
+
+        return array_values(array_filter(
+            array_map(fn(mixed $item): string => trim((string) $item), $value),
+            fn(string $item): bool => $item !== '',
+        ));
     }
 
     private function parseNullableDecimal(mixed $value): ?float

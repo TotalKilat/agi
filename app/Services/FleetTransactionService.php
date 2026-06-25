@@ -42,7 +42,7 @@ class FleetTransactionService
     public function getDataTableQuery(): Builder
     {
         return FleetTransaction::query()
-            ->with(['fleet.customer'])
+            ->with(['fleet.customer', 'fleet.fleetType', 'fleet.location'])
             ->select('fleet_transactions.*');
     }
 

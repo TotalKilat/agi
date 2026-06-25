@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Customer;
 use App\Models\Fleet;
+use App\Models\FleetType;
 use App\Models\FleetTransaction;
+use App\Models\Location;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
@@ -74,6 +76,55 @@ class FleetTransactionImportTest extends TestCase
             ->assertJsonPath('data.unchanged', 2)
             ->assertJsonPath('data.processed', 2)
             ->assertJsonPath('data.skipped', 0);
+    }
+
+    public function test_transaction_data_can_be_filtered_by_multiple_fleet_types_and_locations(): void
+    {
+        $truck = FleetType::query()->create(['name' => 'Truck']);
+        $pickup = FleetType::query()->create(['name' => 'Pickup']);
+        $poolA = Location::query()->create(['name' => 'Pool A']);
+        $poolB = Location::query()->create(['name' => 'Pool B']);
+
+        $this->createFleet('B 9882 SDD', null, [
+            'fleet_type_id' => $truck->id,
+            'location_id' => $poolA->id,
+        ]);
+        $this->createFleet('B 9037 SDE', null, [
+            'fleet_type_id' => $pickup->id,
+            'location_id' => $poolB->id,
+        ]);
+
+        $this->post(route('fleet-transactions.import'), [
+            'file' => $this->sampleUpload(),
+        ], ['Accept' => 'application/json'])->assertOk();
+
+        $this->getJson(route('fleet-transactions.data', [
+            'draw' => 1,
+            'start' => 0,
+            'length' => 10,
+            'fleet_type_ids' => [$truck->id],
+            'location_ids' => [$poolA->id],
+            'columns' => $this->dataTableColumns(),
+        ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertSee('Truck')
+            ->assertSee('Pool A');
+
+        $this->getJson(route('fleet-transactions.data', [
+            'draw' => 2,
+            'start' => 0,
+            'length' => 10,
+            'fleet_type_ids' => [$truck->id, $pickup->id],
+            'location_ids' => [$poolA->id, $poolB->id],
+            'columns' => $this->dataTableColumns(),
+        ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 2)
+            ->assertSee('Truck')
+            ->assertSee('Pickup')
+            ->assertSee('Pool A')
+            ->assertSee('Pool B');
     }
 
     public function test_import_skips_unknown_vehicle_name_and_processes_valid_rows(): void
@@ -191,7 +242,7 @@ class FleetTransactionImportTest extends TestCase
         $this->assertSoftDeleted('fleet_transactions', ['id' => $transaction->id]);
     }
 
-    private function createFleet(string $vehicleName, ?string $deviceName = null): Fleet
+    private function createFleet(string $vehicleName, ?string $deviceName = null, array $attributes = []): Fleet
     {
         $customer = Customer::query()->first() ?: Customer::query()->create([
             'name' => 'AGI Customer',
@@ -206,7 +257,27 @@ class FleetTransactionImportTest extends TestCase
             'vehicle_name' => $vehicleName,
             'device_name' => $deviceName ?? str_replace(' ', '', $vehicleName),
             'is_active' => true,
-        ]);
+        ] + $attributes);
+    }
+
+    private function dataTableColumns(): array
+    {
+        return collect([
+            'fleet_name',
+            'transaction_date',
+            'customer_name',
+            'fleet_type_name',
+            'location_name',
+            'odometer_km',
+            'usage_l',
+            'cost_rp',
+        ])->map(fn(string $column): array => [
+            'data' => $column,
+            'name' => $column,
+            'searchable' => 'true',
+            'orderable' => 'false',
+            'search' => ['value' => '', 'regex' => 'false'],
+        ])->all();
     }
 
     private function sampleUpload(?string $html = null): UploadedFile
